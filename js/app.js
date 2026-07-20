@@ -200,13 +200,15 @@
 
   function introNiveau(L, idx) {
     var m = mondesPrets()[S.mondeIndex], th = THEMES[m.id] || { emoji: "🗺️" };
-    var avail = Engine.nbObjetsPourLettre(S.ctx, L); // sert au jeu, jamais affiché
+    var avail = Engine.nbObjetsPourLettre(S.ctx, L);
+    var s = seuilsEtoiles(avail);
     var best = Store.best(m.id, L);
     ouvrirModal(
       '<div class="emoji-round">' + th.emoji + '</div>' +
       '<h2 class="serif">Niveau ' + (idx + 1) + ' · lettre « ' + L.toUpperCase() + ' »</h2>' +
       '<p>' + esc(m.titre) + '</p>' +
-      '<p style="color:var(--ink-soft)">⭐ passe · ⭐⭐⭐ trouve <b>tous</b> les mots' +
+      '<p style="color:var(--ink-soft)"><b>' + avail + '</b> mots à trouver<br>' +
+      '⭐ ' + s.s1 + '  ·  ⭐⭐ ' + s.s2 + '  ·  ⭐⭐⭐ ' + s.s3 +
       (best ? '<br>Record : <b>' + best + ' pts</b>' : '') + '</p>' +
       '<div class="actions"><button class="btn ghost" id="m-fermer">Fermer</button>' +
       '<button class="btn green" id="m-jouer">Jouer</button></div>');
@@ -244,7 +246,9 @@
     S.mode = "solo"; S.lettre = L; S.soloAvail = avail; S.duree = 60;
     S.joueurClaims = []; S.clesJoueur = new Set(); S.streak = 0; S.scoreSolo = 0; S.motsIndices = {};
     lancerPartie("Niveau · « " + L.toUpperCase() + " »");
-    $("#play-objectif").innerHTML = '🎯 Gagne des étoiles &nbsp;<span id="play-stars">☆☆☆</span>';
+    var s = seuilsEtoiles(avail);
+    $("#play-objectif").innerHTML = '🎯 ⭐ ' + s.s1 + ' · ⭐⭐ ' + s.s2 + ' · ⭐⭐⭐ ' + s.s3 +
+      ' &nbsp; <span id="play-stars">☆☆☆</span>';
   }
 
   function demarrerDuel() {
@@ -265,7 +269,7 @@
   function lancerPartie(titre) {
     montrer("play"); Ads.banner(false);
     $("#play-title").textContent = titre;
-    $("#liste-mots").innerHTML = ""; $("#compteur").textContent = "0 mot";
+    $("#liste-mots").innerHTML = ""; majCompteur();
     $("#play-pts").textContent = "0 pts";
     $("#play-hint").style.display = "none";
     $("#saisie").value = ""; $("#saisie").disabled = true;
@@ -357,7 +361,10 @@
     chip.className = "chip " + cls; chip.textContent = claim.display;
     $("#liste-mots").prepend(chip);
   }
-  function majCompteur() { var n = S.joueurClaims.length; $("#compteur").textContent = n + (n > 1 ? " mots" : " mot"); }
+  function majCompteur() {
+    if (S.mode === "solo") { $("#compteur").textContent = motsTrouvesValides() + " / " + S.soloAvail + " mots"; }
+    else { var n = S.joueurClaims.length; $("#compteur").textContent = n + (n > 1 ? " mots" : " mot"); }
+  }
 
   /* ---- Bonus en partie ---- */
   function rendreBonusBar() {
