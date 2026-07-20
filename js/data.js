@@ -343,8 +343,52 @@ const OBJETS_BUREAU = [
   { mots: ["avion en papier", "avion"] },
   { mots: ["étoile", "étoiles"] },
   { mots: ["cœur", "coeur"] },
-  { mots: ["smiley", "émoticône", "émoticone"] },
-  { mots: ["croix"] }
+  { mots: ["smiley", "émoticône", "émoticone", "visage souriant"] },
+  { mots: ["croix", "croix médicale"] },
+
+  // --- Ajouts complémentaires (liste joueur : objets visibles) ---
+  { mots: ["abat-jour"] },
+  { mots: ["aiguille", "aiguilles"] },
+  { mots: ["bac à courrier", "bac"] },
+  { mots: ["bracelet", "bracelet de montre"] },
+  { mots: ["case à cocher", "case"] },
+  { mots: ["casier de rangement", "casier"] },
+  { mots: ["coche"] },
+  { mots: ["document", "documents"] },
+  { mots: ["feuille", "feuilles"] },
+  { mots: ["flèche", "flèches"] },
+  { mots: ["goutte"] },
+  { mots: ["intercalaire"] },
+  { mots: ["manche"] },
+  { mots: ["mer"] },
+  { mots: ["mur"] },
+  { mots: ["palmier"] },
+  { mots: ["plage"] },
+  { mots: ["poignet"] },
+  { mots: ["porte-documents"] },
+  { mots: ["spirale"] },
+  { mots: ["table"] },
+
+  // --- Chiffres visibles (horloge, calendrier, calculatrice, camembert) ---
+  // Les chiffres n'ont pas de langue -> conservés.
+  { mots: ["un"] },
+  { mots: ["deux"] },
+  { mots: ["trois"] },
+  { mots: ["quatre"] },
+  { mots: ["cinq"] },
+  { mots: ["six"] },
+  { mots: ["sept"] },
+  { mots: ["huit"] },
+  { mots: ["neuf"] },
+  { mots: ["dix"] },
+  { mots: ["onze"] },
+  { mots: ["douze"] },
+  { mots: ["deux mille vingt-quatre"] },
+  { mots: ["vingt-quatre"] },
+  { mots: ["quarante pour cent"] },
+  { mots: ["vingt pour cent"] },
+  { mots: ["vingt-cinq pour cent"] },
+  { mots: ["cent vingt-trois millions quatre cent cinquante-six mille sept cent quatre-vingt-neuf"] }
 ];
 
 /* ---- MONDE 3 : LA CLASSE DES MILLE TROUVAILLES ------------ */

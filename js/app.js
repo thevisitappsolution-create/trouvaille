@@ -8,7 +8,8 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var ENJEU = 3, CALLS = 2;
-  var VERSION_APP = "2.5.5"; // affichée dans Réglages ; à bumper à chaque déploiement
+  var VERSION_APP = "2.6.0"; // affichée dans Réglages ; à bumper à chaque déploiement
+  var TACTILE = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
   var S = {
     mondeIndex: 0, ctx: null, seuil: 5,
@@ -287,7 +288,9 @@
   }
 
   function demarrerChrono() {
-    var s = $("#saisie"); s.disabled = false; s.focus();
+    // Sur mobile : PAS de focus auto (sinon on part en mode réduit sans clavier).
+    // On reste en mode 2 (tout le design) ; le mode réduit s'active au tap.
+    var s = $("#saisie"); s.disabled = false; if (!TACTILE) s.focus();
     S.restant = S.duree; S._lastTick = 0; majFuse();
     S.timer = setInterval(function () {
       S.restant -= 0.1;
@@ -690,13 +693,20 @@
   }
   function appliquer() { clampPan(); $("#scene-img").style.transform = "translate(" + vue.tx + "px," + vue.ty + "px) scale(" + vue.scale + ")"; }
 
-  // Recale l'app sur la zone réellement visible (au-dessus du clavier mobile).
+  // Recale l'app sur la zone réellement visible (au-dessus du clavier mobile)
+  // et bascule le mode "réduit" seulement si le clavier est vraiment ouvert.
   function ajusterViewport() {
     var vv = window.visualViewport; if (!vv) return;
     var app = document.getElementById("app");
     app.style.height = Math.round(vv.height) + "px";
     app.style.transform = vv.offsetTop ? "translateY(" + Math.round(vv.offsetTop) + "px)" : "none";
-    if ($("#screen-play").classList.contains("active") && vue.iw) ajusterVue();
+    var sp = $("#screen-play");
+    if (sp) {
+      var clavier = (window.innerHeight - vv.height) > 150; // clavier réellement ouvert
+      var modal = $("#overlay").classList.contains("active") || $("#overlay-decompte").classList.contains("active");
+      sp.classList.toggle("saisie-active", clavier && sp.classList.contains("active") && !modal);
+      if (sp.classList.contains("active") && vue.iw) ajusterVue();
+    }
   }
   function zoomVers(cx, cy, f) {
     var r = $("#scene").getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
@@ -961,13 +971,9 @@
     // garde le focus de l'input (clavier ouvert) au tap sur "Go" sur mobile
     $("#btn-envoyer").addEventListener("mousedown", function (e) { e.preventDefault(); });
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
-    // clavier ouvert (mobile) -> on masque les icônes pour voir l'image en grand
-    var tactile = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-    $("#saisie").addEventListener("focus", function () { if (tactile) { $("#screen-play").classList.add("saisie-active"); ajusterViewport(); } });
-    $("#saisie").addEventListener("blur", function () { $("#screen-play").classList.remove("saisie-active"); setTimeout(ajusterViewport, 50); });
-
-    // Cale l'app sur la ZONE VISIBLE (au-dessus du clavier) : plus d'espace vide,
-    // l'image remplit tout, la saisie est juste au-dessus du clavier.
+    // Le mode "réduit" (image plein écran) est piloté par l'OUVERTURE RÉELLE du
+    // clavier (visualViewport), pas par le focus -> au démarrage on reste en
+    // mode 2 (tout le design), et on passe en mode 3 seulement quand le clavier sort.
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", ajusterViewport);
       window.visualViewport.addEventListener("scroll", ajusterViewport);
