@@ -893,7 +893,9 @@
     $("#chapter-chip").onclick = ouvrirWorldPicker;
 
     // jeu
-    $("#btn-envoyer").onclick = soumettre;
+    $("#btn-envoyer").onclick = function () { soumettre(); }; // sans passer l'événement !
+    // garde le focus de l'input (clavier ouvert) au tap sur "Go" sur mobile
+    $("#btn-envoyer").addEventListener("mousedown", function (e) { e.preventDefault(); });
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
     $("#play-quitter").onclick = function () { clearInterval(S.timer); montrer(S.mode === "duel" ? "home" : "map"); };
     $("#btn-add-mot").onclick = ouvrirAjoutMot;
