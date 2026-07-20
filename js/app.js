@@ -14,7 +14,7 @@
     mode: null,             // "solo" | "duel"
     lettre: "", duree: 60, restant: 0, timer: null,
     joueurClaims: [], botClaims: [], clesJoueur: null,
-    streak: 0, doubleActif: false, scoreSolo: 0,
+    streak: 0, scoreSolo: 0, motsIndices: {},
     // duel
     manche: 0, nbManches: 3, lettresUtilisees: [], scoreJoueur: 0, scoreBot: 0,
     roundJoueur: 0, roundBot: 0, callsRestants: CALLS, selection: [], manchesLog: [],
@@ -59,18 +59,17 @@
       '<ul class="rule-list">' +
       '<li>🗺️ <b>Conquête</b> — avance sur la carte, gagne des <b>étoiles</b> et des <b>pièces</b>, bats le record de chaque niveau.</li>' +
       '<li>⚔️ <b>Duel</b> — 3 manches contre un adversaire, mêmes lettres, le plus de points gagne.</li></ul>' },
-    { titre: "À faire, à éviter", html:
+    { titre: "Gagne des étoiles", html:
       '<ul class="rule-list">' +
-      '<li><span class="pt-plus">✅</span> Mot valide du thème <b>(+ points)</b></li>' +
-      '<li><span class="pt-plus">✅</span> Enchaîner sans faute <b>(série ×1,5)</b></li>' +
-      '<li><span class="pt-minus">❌</span> Mot inventé : <b>−5 s</b></li>' +
-      '<li><span class="pt-minus">❌</span> Mot déjà joué : <b>−10 s</b></li></ul>' },
+      '<li>⭐ <b>1 étoile</b> — trouve quelques mots : tu passes !</li>' +
+      '<li>⭐⭐ <b>2 étoiles</b> — trouves-en davantage.</li>' +
+      '<li>⭐⭐⭐ <b>3 étoiles</b> — trouve <b>tous</b> les mots (gros bonus de score si le niveau en compte beaucoup !).</li>' +
+      '<li>😌 <b>Aucune pénalité</b> : un mauvais mot ne coûte rien, ose !</li></ul>' },
     { titre: "Tes bonus", html:
       '<ul class="rule-list">' +
-      '<li>🃏 <b>Joker</b> — révèle et ajoute un mot</li>' +
-      '<li>🔍 <b>Loupe</b> — donne un indice</li>' +
-      '<li>⏳ <b>+15 s</b> — rallonge le temps</li>' +
-      '<li>✨ <b>×2</b> — double le prochain mot</li></ul>' +
+      '<li>🃏 <b>Joker</b> — dévoile un mot</li>' +
+      '<li>🔤 <b>Lettre</b> — affiche les lettres d\'un mot dans le désordre</li>' +
+      '<li>⏳ <b>+15 s</b> — rallonge le temps</li></ul>' +
       '<p class="ob-sub">Gagne-les en jouant, ou achète-les en 🛒 boutique.</p>' },
     { titre: "Tout est là", html:
       '<ul class="rule-list">' +
@@ -78,7 +77,7 @@
       '<li>🏦 <b>Banque</b> — encaisse des pièces</li>' +
       '<li>🏆 <b>Classement</b> — Monde et Amis</li>' +
       '<li>⚙️ <b>Réglages</b> — thème, sons, aide</li></ul>' +
-      '<p class="ob-sub">Tu démarres avec <b>50 pièces</b>, 3 jokers et 3 loupes.</p>' }
+      '<p class="ob-sub">Tu démarres avec <b>50 pièces</b>, 3 jokers et 3 lettres.</p>' }
   ];
 
   function rendreOnboarding() {
@@ -177,14 +176,13 @@
 
   function introNiveau(L, idx) {
     var m = mondesPrets()[S.mondeIndex], th = THEMES[m.id] || { emoji: "🗺️" };
-    var avail = Engine.nbObjetsPourLettre(S.ctx, L);
-    var cible3 = Math.max(3, Math.ceil(avail * 0.8));
+    var avail = Engine.nbObjetsPourLettre(S.ctx, L); // sert au jeu, jamais affiché
     var best = Store.best(m.id, L);
     ouvrirModal(
       '<div class="emoji-round">' + th.emoji + '</div>' +
       '<h2 class="serif">Niveau ' + (idx + 1) + ' · lettre « ' + L.toUpperCase() + ' »</h2>' +
-      '<p>' + m.titre + '</p>' +
-      '<p style="color:var(--ink-soft)">≈ ' + avail + ' objets · trouve <b>' + cible3 + '</b> mots pour ⭐⭐⭐' +
+      '<p>' + esc(m.titre) + '</p>' +
+      '<p style="color:var(--ink-soft)">⭐ passe · ⭐⭐⭐ trouve <b>tous</b> les mots' +
       (best ? '<br>Record : <b>' + best + ' pts</b>' : '') + '</p>' +
       '<div class="actions"><button class="btn ghost" id="m-fermer">Fermer</button>' +
       '<button class="btn green" id="m-jouer">Jouer</button></div>');
@@ -192,13 +190,35 @@
     $("#m-jouer").onclick = function () { fermerModal(); demarrerSolo(L, avail); };
   }
 
+  /* Seuils d'étoiles basés sur le temps (~15 s/mot pour 1★), proportionnels ;
+     3★ = TOUS les mots. Ne révèle jamais le nombre de mots disponibles. */
+  function seuilsEtoiles(avail) {
+    return {
+      s1: Math.min(avail, Math.max(1, Math.ceil(S.duree / 15))), // ~4 en 60 s
+      s2: Math.min(avail, Math.max(2, Math.ceil(S.duree / 10))), // ~6 en 60 s
+      s3: avail
+    };
+  }
+  function etoilesPour(found, avail) {
+    var s = seuilsEtoiles(avail);
+    return found >= s.s3 ? 3 : found >= s.s2 ? 2 : found >= s.s1 ? 1 : 0;
+  }
+  function motsTrouvesValides() { return S.joueurClaims.filter(function (c) { return c.objId; }).length; }
+  function majEtoilesLive() {
+    if (S.mode !== "solo") return;
+    var el = $("#play-stars"); if (!el) return;
+    var n = etoilesPour(motsTrouvesValides(), S.soloAvail);
+    el.textContent = "⭐".repeat(n) + "☆".repeat(3 - n);
+  }
+
   /* =========================================================
      GAMEPLAY commun (solo + duel)
      ========================================================= */
   function demarrerSolo(L, avail) {
     S.mode = "solo"; S.lettre = L; S.soloAvail = avail; S.duree = 60;
-    S.joueurClaims = []; S.clesJoueur = new Set(); S.streak = 0; S.doubleActif = false; S.scoreSolo = 0;
-    lancerPartie("Niveau · « " + L.toUpperCase() + " »", "🎯 Trouve " + Math.max(3, Math.ceil(avail * 0.8)) + " mots pour 3⭐");
+    S.joueurClaims = []; S.clesJoueur = new Set(); S.streak = 0; S.scoreSolo = 0; S.motsIndices = {};
+    lancerPartie("Niveau · « " + L.toUpperCase() + " »");
+    $("#play-objectif").innerHTML = '🎯 Gagne des étoiles &nbsp;<span id="play-stars">☆☆☆</span>';
   }
 
   function demarrerDuel() {
@@ -210,17 +230,18 @@
   function prochaineMancheDuel() {
     S.manche++;
     S.lettre = Engine.tireLettre(S.ctx, S.seuil, S.lettresUtilisees); S.lettresUtilisees.push(S.lettre);
-    S.joueurClaims = []; S.botClaims = []; S.clesJoueur = new Set(); S.streak = 0; S.doubleActif = false;
+    S.joueurClaims = []; S.botClaims = []; S.clesJoueur = new Set(); S.streak = 0; S.motsIndices = {};
     S.selection = []; S.roundJoueur = 0; S.roundBot = 0; S.duree = 60;
-    lancerPartie("Duel " + S.manche + "/" + S.nbManches + " · « " + S.lettre.toUpperCase() + " »", "⚔️ Trouve plus de mots que le bot");
+    lancerPartie("Duel " + S.manche + "/" + S.nbManches + " · « " + S.lettre.toUpperCase() + " »");
+    $("#play-objectif").innerHTML = "⚔️ Trouve plus de mots que le bot";
   }
 
-  function lancerPartie(titre, objectif) {
+  function lancerPartie(titre) {
     montrer("play"); Ads.banner(false);
     $("#play-title").textContent = titre;
-    $("#play-objectif").textContent = objectif;
     $("#liste-mots").innerHTML = ""; $("#compteur").textContent = "0 mot";
     $("#play-pts").textContent = "0 pts";
+    $("#play-hint").style.display = "none";
     $("#saisie").value = ""; $("#saisie").disabled = true;
     preparerScene(); rendreBonusBar();
     // décompte
@@ -235,11 +256,20 @@
 
   function demarrerChrono() {
     var s = $("#saisie"); s.disabled = false; s.focus();
-    S.restant = S.duree; majFuse();
+    S.restant = S.duree; S._lastTick = 0; majFuse();
     S.timer = setInterval(function () {
       S.restant -= 0.1;
-      if (S.restant <= 0) { S.restant = 0; majFuse(); finPartie(); }
-      else majFuse();
+      if (S.restant <= 0) { S.restant = 0; majFuse(); finPartie(); return; }
+      majFuse();
+      // tic-tac qui accélère (et monte en aigu) sur les 20 dernières secondes
+      if (S.restant <= 20) {
+        var now = performance.now();
+        var interval = Math.max(90, S.restant * 45);
+        if (now - S._lastTick >= interval) {
+          tone(1000 + (20 - S.restant) * 26, 0.045, 0.06);
+          S._lastTick = now;
+        }
+      }
     }, 100);
   }
 
@@ -252,29 +282,21 @@
     $("#fuse-row").classList.toggle("urgent", S.restant <= 10);
   }
 
-  function penaliteTemps(sec, msg) {
-    S.restant = Math.max(0.1, S.restant - sec); majFuse();
-    toast(msg, "non"); S.streak = 0;
-  }
-
   function soumettre() {
     var input = $("#saisie"), brut = input.value; if (!brut.trim()) return;
     var res = Engine.classer(S.ctx, brut, S.lettre, { floue: true });
 
-    if (res.statut === "rejet") { secoue(input); toast(res.raison, "non"); return; }
+    // Aucune pénalité : un mauvais mot est simplement ignoré (petit shake).
+    if (res.statut === "rejet") { secoue(input); return; }
 
     var claim = res.statut === "valide" ? { objId: res.objId, display: res.display } : { key: res.key, display: res.display };
     var cle = Engine.cleUnicite(claim);
     input.value = "";
 
-    if (S.clesJoueur.has(cle)) { // déjà joué
-      if (S.mode === "solo") penaliteTemps(10, "Déjà joué : −10 s");
-      else toast("Déjà trouvé", "non");
-      return;
-    }
+    if (S.clesJoueur.has(cle)) { secoue(input); return; } // déjà joué : ignoré, sans pénalité
 
-    if (res.statut === "reclame") { // mot inventé (bonne lettre, pas dans le dico)
-      if (S.mode === "solo") { penaliteTemps(5, "Mot inventé : −5 s"); return; }
+    if (res.statut === "reclame") { // bonne lettre mais pas dans la liste
+      if (S.mode === "solo") { secoue(input); return; } // ignoré, aucune pénalité
       // en duel : on l'ajoute (bluff possible §9)
       S.clesJoueur.add(cle); S.joueurClaims.push(claim); ajouterChip(claim, "reclame");
       majCompteur(); bip(392); return;
@@ -282,20 +304,20 @@
 
     // mot valide
     S.clesJoueur.add(cle); S.joueurClaims.push(claim); ajouterChip(claim, "valide");
-    majCompteur();
-    if (S.mode === "solo") { gagnerPointsSolo(res.objId); toast("Trouvé : " + res.display + " !", "ok"); }
-    else toast("Trouvé : " + res.display + " !", "ok");
-    bip(660);
+    majCompteur(); bip(660);
+    toast("Trouvé : " + res.display + " !", "ok");
+    if (S.mode === "solo") {
+      gagnerPointsSolo(res.objId); majEtoilesLive();
+      if (motsRestants().length === 0) setTimeout(finPartie, 350); // tout trouvé → fin anticipée
+    }
   }
 
   function gagnerPointsSolo(objId) {
     var obj = S.ctx.byId.get(objId), f = obj ? obj.f : 3;
-    var base = Math.max(6, 20 - f * 2);
+    var base = 10 + (6 - f);        // objet rare = plus de points (11..15)
     S.streak++;
-    var mult = Math.min(2, 1 + 0.1 * (S.streak - 1));
-    var gain = Math.round(base * mult);
-    if (S.doubleActif) { gain *= 2; S.doubleActif = false; toast("×2 ! +" + gain, "coin"); }
-    S.scoreSolo += gain;
+    var mult = Math.min(2, 1 + 0.08 * (S.streak - 1)); // série (positive uniquement)
+    S.scoreSolo += Math.round(base * mult);
     $("#play-pts").textContent = S.scoreSolo + " pts";
   }
 
@@ -310,7 +332,7 @@
   /* ---- Bonus en partie ---- */
   function rendreBonusBar() {
     var bar = $("#bonus-bar"); bar.innerHTML = "";
-    ["joker", "loupe", "plus15", "double"].forEach(function (id) {
+    ["joker", "lettre", "plus15"].forEach(function (id) {
       var b = document.createElement("button"); b.className = "bonus-btn";
       var n = Store.bonus()[id] || 0;
       b.innerHTML = BONUS[id].emoji + '<small>' + BONUS[id].nom + '</small><span class="cnt">' + n + '</span>';
@@ -326,54 +348,84 @@
     map.forEach(function (mot, id) { if (!trouves[id]) out.push({ objId: id, mot: mot }); });
     return out;
   }
+  // mots restants qui n'ont pas déjà servi d'indice (un Joker et une Lettre
+  // ne portent jamais sur le même mot au cours d'une même partie).
+  function motsRestantsPourIndice() {
+    return motsRestants().filter(function (x) { return !S.motsIndices[x.objId]; });
+  }
   function utiliserBonus(id, btn) {
     if (!Store.aBonus(id)) return;
-    if (id === "plus15") { Store.utiliserBonus(id); S.restant += 15; majFuse(); toast("+15 secondes ⏳", "ok"); }
-    else if (id === "double") { Store.utiliserBonus(id); S.doubleActif = true; toast("Prochain mot ×2 ✨", "coin"); }
-    else if (id === "loupe") {
-      var r = motsRestants(); if (!r.length) { toast("Rien à révéler !", "non"); return; }
-      Store.utiliserBonus(id);
-      var w = r[Math.floor(Math.random() * r.length)].mot;
-      toast("Indice : « " + w.slice(0, 2).toUpperCase() + " » · " + w.length + " lettres", "coin");
+    if (id === "plus15") {
+      Store.utiliserBonus(id); S.restant += 15; majFuse(); toast("+15 secondes ⏳", "ok");
     } else if (id === "joker") {
-      var rr = motsRestants(); if (!rr.length) { toast("Rien à révéler !", "non"); return; }
+      var rr = motsRestantsPourIndice(); if (!rr.length) { toast("Rien à dévoiler !", "non"); return; }
       Store.utiliserBonus(id);
       var pick = rr[Math.floor(Math.random() * rr.length)];
+      S.motsIndices[pick.objId] = true;
       var obj = S.ctx.byId.get(pick.objId);
       var claim = { objId: pick.objId, display: obj.canonique };
       S.clesJoueur.add(Engine.cleUnicite(claim)); S.joueurClaims.push(claim); ajouterChip(claim, "valide");
-      majCompteur(); if (S.mode === "solo") gagnerPointsSolo(pick.objId);
+      majCompteur();
+      if (S.mode === "solo") {
+        gagnerPointsSolo(pick.objId); majEtoilesLive();
+        if (motsRestants().length === 0) setTimeout(finPartie, 350);
+      }
       toast("Joker : " + obj.canonique + " 🃏", "ok");
+    } else if (id === "lettre") {
+      // mot d'un seul tenant (sans espace) de préférence, différent d'un joker
+      var pool = motsRestantsPourIndice();
+      var simples = pool.filter(function (x) { return !/\s/.test(x.mot); });
+      var cand = (simples.length ? simples : pool);
+      if (!cand.length) { toast("Aucun indice dispo !", "non"); return; }
+      Store.utiliserBonus(id);
+      var p = cand[Math.floor(Math.random() * cand.length)];
+      S.motsIndices[p.objId] = true;
+      var lettres = melange(p.mot.replace(/[^a-zA-Zàâäéèêëîïôöùûüçœæ-]/g, "").split(""));
+      $("#play-hint").innerHTML = "🔤 Remets dans l'ordre : <b>" +
+        lettres.map(function (c) { return c.toUpperCase(); }).join(" · ") + "</b>";
+      $("#play-hint").style.display = "";
+      toast("Indice affiché 🔤", "ok");
     }
     rendreBonusBar();
     $("#saisie").focus();
   }
+  function melange(arr) {
+    var a = arr.slice(), orig = a.join("");
+    for (var t = 0; t < 6; t++) {
+      for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var tmp = a[i]; a[i] = a[j]; a[j] = tmp; }
+      if (a.join("") !== orig || a.length < 2) break;
+    }
+    return a;
+  }
 
-  /* ---- Fin de partie ---- */
+  /* ---- Fin de partie : image verte qui se brise, puis résultat ---- */
   function finPartie() {
     clearInterval(S.timer); $("#saisie").disabled = true;
     Store.ajouterMinutes(1); Store.incrStat("partiesJouees");
-    if (S.mode === "solo") finSolo(); else finMancheDuel();
+    shatterScene(function () { if (S.mode === "solo") finSolo(); else finMancheDuel(); });
   }
 
   function finSolo() {
     var m = mondesPrets()[S.mondeIndex], L = S.lettre;
-    var trouves = S.joueurClaims.filter(function (c) { return c.objId; }).length;
+    var trouves = motsTrouvesValides();
     var avail = S.soloAvail || 1;
-    var ratio = trouves / avail;
-    var stars = ratio >= 0.8 ? 3 : (ratio >= 0.5 ? 2 : (trouves >= 3 && ratio >= 0.3 ? 1 : 0));
+    var stars = etoilesPour(trouves, avail);
+    var tout = trouves >= avail;
+    // bonus de complétion (gros si le niveau compte beaucoup de mots) + vitesse
+    if (tout) S.scoreSolo += (avail > 6 ? avail * 10 : 15) + Math.round(S.restant) * 2;
     var prevStars = Store.etoiles(m.id, L), prevBest = Store.best(m.id, L);
     var record = S.scoreSolo > prevBest;
     Store.enregistrerNiveau(m.id, L, stars, S.scoreSolo);
     Store.incrStat("motsTrouves", trouves);
     var gainEtoiles = Math.max(0, stars - prevStars);
-    var pieces = 5 + gainEtoiles * 10 + (record ? 5 : 0);
+    var pieces = 5 + gainEtoiles * 10 + (record ? 5 : 0) + (tout && avail > 6 ? 15 : 0);
     Store.ajouterPieces(pieces);
 
     var html =
       '<div class="big-stars">' + (stars ? "⭐".repeat(stars) + "☆".repeat(3 - stars) : "☆☆☆") + '</div>' +
-      '<h2 class="serif" style="text-align:center">' + (stars ? "Niveau réussi !" : "Presque !") + '</h2>' +
-      '<div class="result-line"><span>Mots trouvés</span><span class="v">' + trouves + " / " + avail + '</span></div>' +
+      '<h2 class="serif" style="text-align:center">' + (stars ? (tout ? "Parfait !" : "Niveau réussi !") : "Presque !") + '</h2>' +
+      (tout ? '<p style="text-align:center;color:var(--green-d);font-weight:800">🎉 Tous les mots trouvés !</p>' : '') +
+      '<div class="result-line"><span>Mots trouvés</span><span class="v">' + trouves + '</span></div>' +
       '<div class="result-line"><span>Score</span><span class="v">' + S.scoreSolo + ' pts' + (record ? ' 🏅' : '') + '</span></div>' +
       '<div class="result-line"><span>Record</span><span class="v">' + Math.max(prevBest, S.scoreSolo) + ' pts</span></div>' +
       '<div class="result-line"><span>Pièces gagnées</span><span class="v gain">+' + pieces + ' 🪙</span></div>' +
@@ -583,9 +635,52 @@
   function toast(msg, type) { var t = $("#toast"); t.textContent = msg; t.className = "toast show " + (type || ""); clearTimeout(toastT); toastT = setTimeout(function () { t.className = "toast " + (type || ""); }, 1500); }
   function secoue(el) { el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
   var audioCtx = null;
-  function bip(freq) {
+  function tone(freq, dur, vol) {
     if (Store.reglages().sons === false) return;
-    try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); var o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = "sine"; o.frequency.value = freq; g.gain.value = .05; o.connect(g); g.connect(audioCtx.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001, audioCtx.currentTime + .18); o.stop(audioCtx.currentTime + .2); } catch (e) {}
+    dur = dur || 0.18; vol = vol || 0.05;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+      o.type = "sine"; o.frequency.value = freq; g.gain.value = vol;
+      o.connect(g); g.connect(audioCtx.destination); o.start();
+      g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+      o.stop(audioCtx.currentTime + dur + 0.02);
+    } catch (e) {}
+  }
+  function bip(freq) { tone(freq, 0.18, 0.05); }
+
+  /* Effet de fin : flash vert + image brisée en morceaux, puis callback. */
+  function shatterScene(cb) {
+    var sc = $("#scene"); if (!sc || !vue.iw) { if (cb) cb(); return; }
+    var w = sc.clientWidth, h = sc.clientHeight;
+    var cont = document.createElement("div"); cont.className = "shatter";
+    var flash = document.createElement("div"); flash.className = "shatter-flash"; cont.appendChild(flash);
+    var cols = 5, rows = 6, cw = w / cols, ch = h / rows;
+    var url = encodeURI(mondesPrets()[S.mondeIndex].image);
+    var bgW = vue.iw * vue.scale, bgH = vue.ih * vue.scale;
+    for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
+      var f = document.createElement("div"); f.className = "frag";
+      f.style.left = (c * cw) + "px"; f.style.top = (r * ch) + "px";
+      f.style.width = cw + "px"; f.style.height = ch + "px";
+      f.style.backgroundImage = "url('" + url + "')";
+      f.style.backgroundSize = bgW + "px " + bgH + "px";
+      f.style.backgroundPosition = (vue.tx - c * cw) + "px " + (vue.ty - r * ch) + "px";
+      cont.appendChild(f);
+      (function (frag) {
+        requestAnimationFrame(function () {
+          setTimeout(function () {
+            var dx = (Math.random() * 2 - 1) * 220;
+            var dy = (Math.random() * -1 - 0.2) * 240 + 140;
+            var rot = (Math.random() * 2 - 1) * 200;
+            frag.style.transform = "translate(" + dx + "px," + dy + "px) rotate(" + rot + "deg)";
+            frag.style.opacity = "0";
+          }, 180);
+        });
+      })(f);
+    }
+    sc.appendChild(cont);
+    tone(180, 0.5, 0.08); // "crash"
+    setTimeout(function () { cont.remove(); if (cb) cb(); }, 1150);
   }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 

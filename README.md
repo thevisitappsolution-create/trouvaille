@@ -16,8 +16,9 @@
 - **Conquête** (solo) : carte de niveaux par monde ; chaque niveau = 1 image + 1 lettre.
   Trouve des mots, gagne des **⭐ (1-3)**, des **🪙 pièces**, bats le **record**.
 - **Duel** : 3 manches contre un bot (unique/partagé + **Call Image** de bluff).
-- **Bonus** en partie : 🃏 Joker (révèle un mot), 🔍 Loupe (indice), ⏳ +15 s, ✨ ×2.
-  Pénalités : mot inventé −5 s, mot déjà joué −10 s.
+- **Bonus** en partie : 🃏 Joker (dévoile un mot), 🔤 Lettre (lettres d'un mot en désordre), ⏳ +15 s.
+  **Aucune pénalité** ; les étoiles dépendent du nombre de mots trouvés (⭐ ≈ 4 mots, ⭐⭐⭐ = tous).
+  Le nombre de mots par lettre n'est jamais affiché. Fin de manche : l'image vire au vert et se brise.
 - **Boutique / Banque** (économie de pièces, vidéo récompensée), **Classement**, **Réglages** (thème clair/sombre, sons, pub).
 - **5 mondes** : Caverne, Bureau, Classe, Parc, Plage — chacun bâti sur ton image + ton dictionnaire.
 

@@ -534,18 +534,16 @@ const THEMES = {
 
 /* Bonus utilisables en partie (adaptés au gameplay Trouvaille). */
 const BONUS = {
-  joker:  { emoji: "🃏", nom: "Joker",  desc: "Révèle et ajoute un mot valide restant" },
-  loupe:  { emoji: "🔍", nom: "Loupe",  desc: "Donne un indice sur un mot restant" },
-  plus15: { emoji: "⏳", nom: "+15 s",  desc: "Rallonge le temps de 15 secondes" },
-  double: { emoji: "✨", nom: "×2",     desc: "Double les points du prochain mot" }
+  joker:  { emoji: "🃏", nom: "Joker",  desc: "Dévoile un mot à trouver" },
+  lettre: { emoji: "🔤", nom: "Lettre", desc: "Affiche les lettres d'un mot dans le désordre" },
+  plus15: { emoji: "⏳", nom: "+15 s",  desc: "Rallonge le temps de 15 secondes" }
 };
 
 /* Boutique : achat de bonus avec les pièces. */
 const SHOP = [
   { id: "joker",  prix: 30 },
-  { id: "loupe",  prix: 20 },
-  { id: "plus15", prix: 25 },
-  { id: "double", prix: 40 }
+  { id: "lettre", prix: 25 },
+  { id: "plus15", prix: 20 }
 ];
 
 /* Avatars proposés à l'onboarding. */

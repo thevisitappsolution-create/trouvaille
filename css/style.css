@@ -390,6 +390,21 @@ h1.logo-txt { font-size: clamp(2rem, 8vw, 3rem); margin: 0; letter-spacing: .5px
 .toast.show { opacity: .96; transform: translateX(-50%) translateY(0); }
 .toast.ok { background: var(--green-d); } .toast.non { background: var(--coral); } .toast.coin { background: var(--coin-d); }
 
+/* méteo d'étoiles live + indice */
+#play-stars { letter-spacing: 2px; font-size: 1.05rem; }
+#play-hint { color: var(--primary); font-weight: 700; }
+#play-hint b { letter-spacing: 1px; }
+
+/* Fin de partie : image verte qui se brise */
+.shatter { position: absolute; inset: 0; z-index: 6; pointer-events: none; overflow: hidden; }
+.shatter-flash { position: absolute; inset: 0; background: #22c55e; opacity: 0; animation: flashg .6s ease forwards; }
+@keyframes flashg { 0% { opacity: 0; } 28% { opacity: .82; } 100% { opacity: 0; } }
+.frag {
+  position: absolute; background-repeat: no-repeat; opacity: 1;
+  filter: hue-rotate(75deg) saturate(1.7) brightness(1.05);
+  transition: transform .95s cubic-bezier(.2,.7,.3,1), opacity .95s ease;
+}
+
 /* décompte */
 .decompte { font-family: Georgia, serif; font-size: 7rem; font-weight: 900; color: var(--primary); animation: zdec .8s ease; }
 @keyframes zdec { from { transform: scale(2); opacity: 0; } to { transform: scale(1); opacity: 1; } }

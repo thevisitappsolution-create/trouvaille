@@ -10,8 +10,8 @@ const Store = (function () {
     onboarding: false,
     profil: { pseudo: "", email: "", avatar: "😀", plus15ans: true },
     pieces: 50,
-    // inventaire de bonus (démarrage : 3 jokers, 3 loupes, 2×+15s, 2××2)
-    bonus: { joker: 3, loupe: 3, plus15: 2, double: 2 },
+    // inventaire de bonus (démarrage : 3 jokers, 3 lettres, 2×+15s)
+    bonus: { joker: 3, lettre: 3, plus15: 2 },
     // progression Conquête : { "mondeId:lettre": { etoiles: 0..3, best: score } }
     progression: {},
     reglages: { theme: "clair", sons: true, pub: true, consentPub: null },
