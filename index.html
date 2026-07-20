@@ -4,200 +4,251 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Trouvaille — 1 image · 1 lettre · 1 minute</title>
+  <meta name="description" content="Trouvaille : observe une image, reçois une lettre, trouve un maximum de mots en 60 secondes. Jeu de mots et d'observation." />
+  <meta name="theme-color" content="#6c5ce7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Trouvaille" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <link rel="apple-touch-icon" href="icons/icon-512.png" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <div id="app">
 
-    <!-- ================= ACCUEIL ================= -->
-    <section class="screen active" id="screen-home">
-      <div class="wrap">
-        <h1 class="logo">Trouvaille</h1>
-        <p class="tagline">1 image · 1 lettre · 1 minute</p>
-
-        <div class="mondes" id="mondes"><!-- injecté par JS --></div>
-
-        <div class="reglages">
-          <div class="reglage">
-            <label>Mode de validation</label>
-            <div class="segments" data-cle="mode">
-              <button class="on" data-val="decouverte">Découverte</button>
-              <button data-val="confiance">Confiance · bluff</button>
-            </div>
-            <div class="aide-txt">Découverte : validation instantanée (idéal pour apprendre). Confiance : tes mots restent secrets, on joue au bluff (§9).</div>
-          </div>
-
-          <div class="reglage">
-            <label>Adversaire</label>
-            <div class="segments" data-cle="difficulte">
-              <button data-val="0.5">Facile</button>
-              <button class="on" data-val="0.8">Normal</button>
-              <button data-val="1">Corsé</button>
-            </div>
-          </div>
-
-          <div class="reglage">
-            <label>Durée d'une manche</label>
-            <div class="segments" data-cle="duree">
-              <button data-val="45">45 s</button>
-              <button class="on" data-val="60">60 s</button>
-              <button data-val="90">90 s</button>
-            </div>
-          </div>
+    <!-- ============ ONBOARDING ============ -->
+    <section class="screen active" id="screen-onboarding">
+      <div class="ob-wrap">
+        <div class="ob-card card pop" id="ob-content"><!-- rendu par app.js --></div>
+        <div class="dots" id="ob-dots"></div>
+        <div class="ob-actions">
+          <button class="btn ghost" id="ob-passer">Passer</button>
+          <button class="btn green" id="ob-suivant">Suivant</button>
         </div>
-
-        <button class="btn grand" id="btn-jouer">▶ Jouer · 3 manches</button>
-        <div class="liens"><button class="lien" id="btn-aide">Comment jouer ?</button></div>
-        <div class="footer-note">Prototype · 5 mondes jouables · choisis-en un puis « Jouer »</div>
       </div>
     </section>
 
-    <!-- ================= JEU ================= -->
-    <section class="screen" id="screen-play">
-      <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span id="hud-manche" style="font-size:.85rem;color:var(--creme-doux);">Manche 1/3</span>
-        <span style="display:flex;gap:8px;">
-          <button id="btn-muet" class="btn fantome" style="padding:.4em .7em;font-size:1rem;">🔊</button>
-          <button id="btn-quitter" class="btn fantome" style="padding:.4em .7em;font-size:1rem;">✕</button>
-        </span>
+    <!-- ============ ACCUEIL ============ -->
+    <section class="screen" id="screen-home">
+      <div class="topbar">
+        <button class="coin-pill" id="home-coins"><span class="co"></span><b id="home-coins-val">50</b><span class="plus">+</span></button>
+        <span class="sp"></span>
+        <button class="avatar-mini" id="home-avatar">😀</button>
       </div>
 
-      <div class="hud">
-        <div class="lettre-badge" id="hud-lettre">A</div>
-        <div class="chrono" id="hud-chrono">
-          <div class="temps">60</div>
-          <div class="barre"><i></i></div>
+      <div class="home-hero">
+        <div class="home-logo">
+          <span class="logo-tile">T</span>
+          <h1 class="logo-txt serif"><span class="a">Trou</span><span class="b">vaille</span></h1>
         </div>
-        <div class="score-mini" id="hud-score">Toi<b>0</b></div>
+        <p class="tagline">Ouvre l'œil. Trouve les mots.</p>
+        <div class="home-map">🗺️</div>
+        <button class="btn green grand home-play" id="btn-conquete">🗺️ Conquête</button>
       </div>
+
+      <div class="bottom-nav">
+        <button class="nav-btn" id="nav-duel">⚔️<small>Duel</small></button>
+        <button class="nav-btn" id="nav-boutique">🛒<small>Boutique</small></button>
+        <button class="nav-btn" id="nav-classement">🏆<small>Classement</small></button>
+        <button class="nav-btn" id="nav-reglages">⚙️<small>Réglages</small></button>
+      </div>
+      <div class="nav-row-labels"></div>
+
+      <div class="playtime">
+        <div class="bars" id="playtime-bars"></div>
+        <span class="lbl" id="playtime-lbl">0/70 min</span>
+        <span>🎁</span>
+      </div>
+      <div class="ad-banner" id="ad-banner"><span class="adtag">Pub</span> Bannière AdMob (simulée sur le web)</div>
+      <div class="footer-note">Prototype · lexique : dictionnaires officiels par image</div>
+    </section>
+
+    <!-- ============ CARTE CONQUÊTE ============ -->
+    <section class="screen" id="screen-map">
+      <div class="topbar">
+        <button class="btn ghost sm back" data-go="home">← Accueil</button>
+        <span class="sp"></span>
+        <button class="coin-pill"><span class="co"></span><b class="coins-val">50</b></button>
+      </div>
+      <button class="chapter-chip" id="chapter-chip">🏺 La Caverne ▾</button>
+      <div class="map" id="map-container"></div>
+    </section>
+
+    <!-- ============ JEU (solo Conquête OU manche de Duel) ============ -->
+    <section class="screen" id="screen-play">
+      <div class="play-head">
+        <button class="btn ghost sm" id="play-quitter">Quitter</button>
+        <span class="title serif" id="play-title">Niveau</span>
+        <button class="coin-pill"><span class="co"></span><b class="coins-val">50</b></button>
+      </div>
+      <div class="fuse-row" id="fuse-row">
+        <span class="pts" id="play-pts">0 pts</span>
+        <div class="fuse"><div class="wick"></div><div class="burn" id="fuse-burn"></div><span class="flame" id="fuse-flame">🔥</span></div>
+        <span class="time" id="play-time">1:00</span>
+      </div>
+      <div class="objectif" id="play-objectif">🎯 Objectif</div>
 
       <div class="scene" id="scene">
-        <img id="scene-img" alt="Scène du jeu" />
-        <div class="scene-hint" id="scene-hint">✋ glisse pour explorer · molette pour zoomer</div>
+        <img id="scene-img" alt="Image du niveau" />
+        <div class="scene-hint" id="scene-hint">✋ glisse · molette pour zoomer</div>
         <div class="zoom-ctrl">
-          <button id="zoom-plus" title="Zoom +">+</button>
-          <button id="zoom-moins" title="Zoom −">−</button>
-          <button id="zoom-reset" title="Réinitialiser">⤢</button>
+          <button id="zoom-plus">+</button><button id="zoom-moins">−</button><button id="zoom-reset">⤢</button>
         </div>
       </div>
 
-      <div class="saisie-zone">
-        <div class="saisie-ligne">
-          <input id="saisie" type="text" autocomplete="off" autocorrect="off"
-                 autocapitalize="off" spellcheck="false"
-                 placeholder="Un objet qui commence par la lettre…" />
-          <button class="btn" id="btn-envoyer">Go ↵</button>
-        </div>
-        <div class="compteur" id="compteur">0 mot saisi</div>
-        <div class="liste-mots" id="liste-mots"></div>
+      <div class="bonus-bar" id="bonus-bar"></div>
+
+      <div class="saisie-ligne">
+        <input id="saisie" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Un mot commençant par la lettre…" />
+        <button class="btn green" id="btn-envoyer">Go ↵</button>
       </div>
+      <div class="compteur" id="compteur">0 mot</div>
+      <div class="liste-mots" id="liste-mots"></div>
     </section>
 
-    <!-- ================= RÉVÉLATION + CALL IMAGE ================= -->
+    <!-- ============ RÉVÉLATION + CALL IMAGE (Duel) ============ -->
     <section class="screen" id="screen-reveal">
-      <div class="wrap">
-        <h2 style="text-align:center;font-family:Georgia,serif;color:var(--or-clair);margin:.2em 0;">
-          Révélation — lettre « <span id="rev-lettre">A</span> »
-        </h2>
+      <h2 class="serif" style="text-align:center;margin:.2em 0">Révélation — « <span id="rev-lettre">A</span> »</h2>
+      <div class="rev-scores">
+        <div><div class="nom">Toi</div><div class="val" id="rev-score-joueur">0</div></div>
+        <div class="vs">vs</div>
+        <div><div class="nom">Bot</div><div class="val" id="rev-score-bot">0</div></div>
+      </div>
+      <div class="colonnes">
+        <div class="colonne" id="rev-joueur"><h3>🧑 Tes mots</h3><div class="pile"></div></div>
+        <div class="colonne" id="rev-bot"><h3>🤖 Le bot</h3><div class="pile"></div></div>
+      </div>
+      <div class="call-info">
+        <b>Call Image ⚔</b> — un mot du bot te paraît inventé ? Touche-le pour le contester.
+        Il te reste <b id="calls-restants">2</b> contestation(s).
+        <div id="call-journal"></div>
+      </div>
+      <div class="modal actions" style="display:flex;gap:10px">
+        <button class="btn green grand" id="btn-valider-calls">Passer</button>
+        <button class="btn green grand" id="btn-suite-manche" style="display:none">Résultat →</button>
+      </div>
+    </section>
 
-        <div class="rev-scores">
-          <div class="camp"><div class="nom">Toi</div><div class="val" id="rev-score-joueur">0</div></div>
-          <div class="vs">vs</div>
-          <div class="camp"><div class="nom">Bot</div><div class="val" id="rev-score-bot">0</div></div>
-        </div>
+    <!-- ============ RÉSULTAT (solo ou duel) ============ -->
+    <section class="screen center-col" id="screen-result">
+      <div class="card pop" style="max-width:400px;width:100%" id="result-content"></div>
+    </section>
 
-        <div class="colonnes">
-          <div class="colonne" id="rev-joueur">
-            <h3>🧑 Tes trouvailles</h3>
-            <div class="pile"></div>
-          </div>
-          <div class="colonne" id="rev-bot">
-            <h3>🤖 Le bot réclame…</h3>
-            <div class="pile"></div>
-          </div>
-        </div>
-
-        <div class="call-info">
-          <b>Call Image ⚔</b> — un mot du bot te paraît <i>inventé</i> ? Touche-le pour le contester.
-          Si c'était un bluff, tu rafles ses points ; s'il était réel, c'est toi qui paies (§9.2).
-          Il te reste <span class="calls-restants" id="calls-restants">2</span> contestation(s).
-          <div id="call-journal"></div>
-        </div>
-
-        <div class="actions">
-          <button class="btn grand" id="btn-valider-calls">Passer</button>
-          <button class="btn grand" id="btn-suite-manche" style="display:none">Résultat de la manche →</button>
+    <!-- ============ BOUTIQUE ============ -->
+    <section class="screen" id="screen-boutique">
+      <div class="topbar">
+        <button class="btn ghost sm" data-go="home">← Accueil</button>
+        <span class="sp"></span>
+        <button class="coin-pill"><span class="co"></span><b class="coins-val">50</b></button>
+      </div>
+      <h2 class="serif section-title">🛒 Boutique</h2>
+      <div class="shop-grid" id="shop-grid"></div>
+      <h2 class="serif section-title">Gagner des pièces</h2>
+      <div class="card">
+        <div class="earn-row">
+          <span class="em">📺</span>
+          <div class="tx"><b>Regarder une vidéo</b><span>+20 pièces (pub récompensée)</span></div>
+          <button class="btn coin sm" id="btn-rewarded-shop">+20</button>
         </div>
       </div>
     </section>
 
-    <!-- ================= RÉSULTAT DE MANCHE ================= -->
-    <section class="screen" id="screen-manche">
-      <div class="wrap">
-        <div class="bloc">
-          <h2 id="manche-titre">Manche</h2>
-          <div id="manche-lignes"></div>
+    <!-- ============ BANQUE ============ -->
+    <section class="screen" id="screen-banque">
+      <div class="topbar">
+        <button class="btn ghost sm" data-go="home">← Accueil</button>
+        <span class="sp"></span>
+      </div>
+      <h2 class="serif section-title">🏦 Banque</h2>
+      <div class="card balance-card">
+        <div>Ton solde</div>
+        <div class="big"><span id="banque-solde">50</span> 🪙</div>
+      </div>
+      <h2 class="serif section-title">Encaisser</h2>
+      <div class="card">
+        <div class="earn-row">
+          <span class="em">📺</span>
+          <div class="tx"><b>Vidéo récompensée</b><span>+20 pièces</span></div>
+          <button class="btn coin sm" id="btn-rewarded-banque">+20</button>
         </div>
-        <div class="actions">
-          <button class="btn grand" id="btn-manche-suivante">Manche suivante →</button>
-          <button class="btn grand" id="btn-fin" style="display:none">Résultat final →</button>
+        <div class="earn-row" style="border-top:1px solid var(--line)">
+          <span class="em">🎁</span>
+          <div class="tx"><b>Cadeau quotidien</b><span>+10 pièces / jour</span></div>
+          <button class="btn coin sm" id="btn-cadeau">Ouvrir</button>
         </div>
       </div>
     </section>
 
-    <!-- ================= FIN DE PARTIE ================= -->
-    <section class="screen" id="screen-fin">
-      <div class="wrap">
-        <div id="verdict" class="verdict">—</div>
-        <div class="bloc"><div id="fin-lignes"></div></div>
-        <div class="bloc">
-          <div class="carte-partage" id="carte-partage"></div>
-          <div class="actions" style="margin-top:12px;">
-            <button class="btn fantome" id="btn-copier">📋 Copier le résultat</button>
-          </div>
-        </div>
-        <div class="actions">
-          <button class="btn grand" id="btn-revanche">↻ Revanche</button>
-          <button class="btn fantome" id="btn-menu">Menu</button>
-        </div>
+    <!-- ============ CLASSEMENT ============ -->
+    <section class="screen" id="screen-classement">
+      <div class="topbar">
+        <button class="btn ghost sm" data-go="home">← Accueil</button>
+        <span class="sp"></span>
+        <button class="coin-pill"><span class="co"></span><b class="coins-val">50</b></button>
+      </div>
+      <h2 class="serif section-title">🏆 Classement</h2>
+      <div class="lb-tabs">
+        <button class="on" data-lb="monde">Monde</button>
+        <button data-lb="amis">Amis</button>
+      </div>
+      <div id="lb-list"></div>
+    </section>
+
+    <!-- ============ RÉGLAGES ============ -->
+    <section class="screen" id="screen-reglages">
+      <div class="topbar">
+        <button class="btn ghost sm" data-go="home">← Accueil</button>
+        <span class="sp"></span>
+      </div>
+      <h2 class="serif section-title">⚙️ Réglages</h2>
+      <div class="card" style="padding:4px 14px">
+        <div class="setting"><span class="em">🌙</span><span class="tx">Thème sombre</span><button class="switch" id="sw-theme"></button></div>
+        <div class="setting"><span class="em">🔊</span><span class="tx">Sons</span><button class="switch on" id="sw-sons"></button></div>
+        <div class="setting"><span class="em">📺</span><span class="tx">Publicités</span><button class="switch on" id="sw-pub"></button></div>
+        <div class="setting"><span class="em">❓</span><span class="tx">Comment jouer</span><button class="btn ghost sm" id="btn-aide">Voir</button></div>
+        <div class="setting"><span class="em">🔒</span><span class="tx">Confidentialité</span><button class="btn ghost sm" data-go="confid">Lire</button></div>
+        <div class="setting"><span class="em">🗑️</span><span class="tx">Réinitialiser</span><button class="btn ghost sm" id="btn-reset">Effacer</button></div>
+      </div>
+      <div class="footer-note" id="reglages-version"></div>
+    </section>
+
+    <!-- ============ CONFIDENTIALITÉ ============ -->
+    <section class="screen" id="screen-confid">
+      <div class="topbar">
+        <button class="btn ghost sm" data-go="reglages">← Retour</button>
+        <span class="sp"></span>
+      </div>
+      <h2 class="serif section-title">🔒 Confidentialité</h2>
+      <div class="card legal">
+        <p><b>Trouvaille</b> respecte ta vie privée. Cette page résume le traitement des données (prototype).</p>
+        <h3>Données stockées</h3>
+        <p>Ton pseudo, avatar, âge (≥/‹ 15 ans), pièces et progression sont enregistrés <b>uniquement sur ton appareil</b> (stockage local). Rien n'est envoyé à un serveur dans cette version.</p>
+        <h3>Publicité</h3>
+        <p>La version publiée sur les stores affichera des publicités via <b>Google AdMob</b>. Selon ta région, un écran de consentement (RGPD / ATT iOS) te sera présenté. Tu peux désactiver la pub dans les Réglages.</p>
+        <h3>Enfants</h3>
+        <p>Le choix « moins de 15 ans » active un traitement publicitaire non personnalisé, conformément aux règles des stores.</p>
+        <h3>Contact</h3>
+        <p>Pour toute question : the.visit.app.solution@gmail.com</p>
       </div>
     </section>
 
-    <!-- ================= OVERLAYS ================= -->
+    <!-- ============ OVERLAYS ============ -->
     <div class="overlay" id="overlay-decompte"><div class="decompte" id="decompte">3</div></div>
-
-    <div class="overlay" id="overlay-aide">
-      <div class="panneau-aide">
-        <h2>Comment jouer</h2>
-        <p><b>Une image, une lettre, 60 secondes.</b> Observe la scène et tape un maximum d'objets qui y sont visibles <b>et</b> qui commencent par la lettre imposée.</p>
-
-        <h3>Le barème (§8.2)</h3>
-        <ul>
-          <li><span class="pt">3 pts</span> — mot <b>unique</b> : tu es le seul à l'avoir vu.</li>
-          <li><span class="pt">1 pt</span> — mot <b>partagé</b> : l'adversaire l'a aussi.</li>
-        </ul>
-        <p>Voir ce que l'autre ne voit pas rapporte plus que la vitesse pure.</p>
-
-        <h3>Le Call Image ⚔ (§9)</h3>
-        <p>À la révélation, les mots ne sont pas vérifiés automatiquement : on se fait confiance… ou pas. Si un mot de l'adversaire te semble <i>inventé</i>, conteste-le :</p>
-        <ul>
-          <li>Le mot <b>était bien dans l'image</b> → tu avais tort, tu cèdes tes points.</li>
-          <li>Le mot <b>n'y était pas</b> → tu avais raison, tu rafles ses points.</li>
-        </ul>
-        <p><b>Celui qui a raison prend les points de celui qui a tort.</b> (2 contestations max par manche.)</p>
-
-        <h3>Astuce</h3>
-        <p>Zoome (molette / pincer) pour débusquer les petits objets. Un mot <span class="exemple">✓ vert</span> est reconnu ; un mot <span class="exemple">? ambre</span> est un pari : il peut être contesté !</p>
-
-        <div class="actions"><button class="btn grand" id="btn-fermer-aide">J'ai compris</button></div>
-      </div>
-    </div>
-
+    <div class="overlay" id="overlay"><div class="modal card pop" id="overlay-content"></div></div>
     <div class="toast" id="toast"></div>
   </div>
 
   <script src="js/data.js"></script>
   <script src="js/engine.js"></script>
-  <script src="js/game.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/ads.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function(){}); });
+    }
+  </script>
 </body>
 </html>

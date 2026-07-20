@@ -1,0 +1,24 @@
+{
+  "name": "trouvaille",
+  "version": "2.0.0",
+  "description": "Trouvaille — jeu de mots et d'observation (1 image, 1 lettre, 1 minute).",
+  "private": true,
+  "scripts": {
+    "test": "node tests/test-moteur.js",
+    "copy": "node scripts/build-www.js",
+    "cap:sync": "npm run copy && npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:android": "npm run copy && npx cap sync android && npx cap open android",
+    "cap:ios": "npm run copy && npx cap sync ios && npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor-community/admob": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}

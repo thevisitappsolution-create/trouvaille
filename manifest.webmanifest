@@ -1,0 +1,19 @@
+{
+  "name": "Trouvaille — 1 image · 1 lettre · 1 minute",
+  "short_name": "Trouvaille",
+  "description": "Observe une image, reçois une lettre, trouve un maximum de mots en 60 secondes. Jeu de mots et d'observation.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f0ff",
+  "theme_color": "#6c5ce7",
+  "categories": ["games", "word", "puzzle"],
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

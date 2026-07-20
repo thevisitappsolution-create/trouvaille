@@ -1,0 +1,13 @@
+{
+  "appId": "com.trouvaille.app",
+  "appName": "Trouvaille",
+  "webDir": "www",
+  "backgroundColor": "#f4f0ffff",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#6c5ce7",
+      "showSpinner": false
+    }
+  }
+}

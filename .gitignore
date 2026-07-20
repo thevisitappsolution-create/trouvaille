@@ -5,3 +5,11 @@ Desktop.ini
 *.tmp
 *~
 .vscode/
+
+# Node / Capacitor (générés)
+node_modules/
+www/
+android/
+ios/
+.gradle/
+*.log

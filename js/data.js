@@ -520,3 +520,33 @@ const LEURRES = {
   t: ["tabouret", "tabatière", "timbale"],
   v: ["vielle", "vielle à roue", "veilleuse"]
 };
+
+/* ---- MÉTA-JEU : thèmes, boutique, bonus (habillage ViraLetter) ---- */
+
+/* Habillage de chaque monde sur la carte « Conquête ». */
+const THEMES = {
+  caverne: { emoji: "🏺", couleur: "#b07cff", chapitre: "La Caverne" },
+  bureau:  { emoji: "🖇️", couleur: "#4aa3ff", chapitre: "Le Bureau" },
+  classe:  { emoji: "🎒", couleur: "#ff8f5e", chapitre: "La Classe" },
+  parc:    { emoji: "🌳", couleur: "#37c98b", chapitre: "Le Parc" },
+  plage:   { emoji: "🏖️", couleur: "#ffc230", chapitre: "La Plage" }
+};
+
+/* Bonus utilisables en partie (adaptés au gameplay Trouvaille). */
+const BONUS = {
+  joker:  { emoji: "🃏", nom: "Joker",  desc: "Révèle et ajoute un mot valide restant" },
+  loupe:  { emoji: "🔍", nom: "Loupe",  desc: "Donne un indice sur un mot restant" },
+  plus15: { emoji: "⏳", nom: "+15 s",  desc: "Rallonge le temps de 15 secondes" },
+  double: { emoji: "✨", nom: "×2",     desc: "Double les points du prochain mot" }
+};
+
+/* Boutique : achat de bonus avec les pièces. */
+const SHOP = [
+  { id: "joker",  prix: 30 },
+  { id: "loupe",  prix: 20 },
+  { id: "plus15", prix: 25 },
+  { id: "double", prix: 40 }
+];
+
+/* Avatars proposés à l'onboarding. */
+const AVATARS = ["😀", "😎", "🤠", "🦊", "🐼", "🐸", "🦁", "🐙", "🦄", "🌸", "🌵", "⭐"];
