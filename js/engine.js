@@ -173,8 +173,11 @@ const Engine = (function () {
     }
 
     if (objId) {
-      const obj = ctx.byId.get(objId);
-      return { statut: "valide", objId, display: obj.canonique };
+      // Affiche le mot qui commence par la LETTRE DU NIVEAU (pas forcément le
+      // canonique). Ex. niveau « E » + "écouteur" -> on montre « écouteurs »,
+      // pas « casque ». Repli sur le canonique si besoin.
+      const motLettre = (ctx.parLettre[L] && ctx.parLettre[L].get(objId)) || ctx.byId.get(objId).canonique;
+      return { statut: "valide", objId: objId, display: motLettre };
     }
     return { statut: "reclame", key: "mot:" + n, display: brut.trim() };
   }

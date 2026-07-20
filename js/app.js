@@ -8,7 +8,7 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var ENJEU = 3, CALLS = 2;
-  var VERSION_APP = "2.5.4"; // affichée dans Réglages ; à bumper à chaque déploiement
+  var VERSION_APP = "2.5.5"; // affichée dans Réglages ; à bumper à chaque déploiement
 
   var S = {
     mondeIndex: 0, ctx: null, seuil: 5,
@@ -400,15 +400,14 @@
       Store.utiliserBonus(id);
       var pick = rr[Math.floor(Math.random() * rr.length)];
       S.motsIndices[pick.objId] = true;
-      var obj = S.ctx.byId.get(pick.objId);
-      var claim = { objId: pick.objId, display: obj.canonique };
+      var claim = { objId: pick.objId, display: pick.mot }; // mot de la lettre du niveau
       S.clesJoueur.add(Engine.cleUnicite(claim)); S.joueurClaims.push(claim); ajouterChip(claim, "valide");
       majCompteur();
       if (S.mode === "solo") {
         gagnerPointsSolo(pick.objId); majEtoilesLive();
         if (motsRestants().length === 0) setTimeout(finPartie, 350);
       }
-      toast("Joker : " + obj.canonique + " 🃏", "ok");
+      toast("Joker : " + pick.mot + " 🃏", "ok");
     } else if (id === "lettre") {
       // mot d'un seul tenant (sans espace) de préférence, différent d'un joker
       var pool = motsRestantsPourIndice();
