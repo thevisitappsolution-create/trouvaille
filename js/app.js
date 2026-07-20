@@ -726,6 +726,64 @@
   }
 
   /* =========================================================
+     CARNET DE NOTES — repérer des objets à m'envoyer
+     ========================================================= */
+  function ouvrirNote() {
+    var m = mondesPrets()[S.mondeIndex];
+    ouvrirModal(
+      '<h2 class="serif">📝 Noter des mots</h2>' +
+      '<p style="color:var(--ink-soft)">Note les objets que tu vois sur <b>' + esc(m.titre) + '</b> ' +
+      '(toutes lettres). Tu me les enverras pour enrichir le jeu.</p>' +
+      '<div class="saisie-ligne"><input class="field" id="note-mot" placeholder="Un objet que tu vois…" autocomplete="off" style="margin:0">' +
+      '<button class="btn green" id="note-add">Noter</button></div>' +
+      '<div class="liste-mots" id="note-liste" style="margin-top:12px"></div>' +
+      '<div class="actions"><button class="btn ghost" id="note-fermer">Fermer</button></div>');
+    function rendre() {
+      var box = $("#note-liste"); box.innerHTML = "";
+      var arr = Store.notes(m.id);
+      if (!arr.length) { box.innerHTML = '<span style="color:var(--ink-soft);font-size:.85rem">Aucune note pour l\'instant.</span>'; return; }
+      arr.forEach(function (w, i) {
+        var chip = document.createElement("span"); chip.className = "chip neutre"; chip.style.cursor = "pointer";
+        chip.textContent = w + "  ✕";
+        chip.title = "Retirer";
+        chip.onclick = function () { Store.retirerNote(m.id, i); rendre(); };
+        box.appendChild(chip);
+      });
+    }
+    function ajouter() {
+      var champ = $("#note-mot"), v = (champ.value || "").trim();
+      if (v.length < 2) { toast("Écris un mot", "non"); return; }
+      Store.ajouterNote(m.id, v); champ.value = ""; champ.focus(); rendre();
+      toast("Noté : " + v + " 📝", "ok");
+    }
+    $("#note-add").onclick = ajouter;
+    $("#note-mot").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); ajouter(); } });
+    $("#note-fermer").onclick = function () { fermerModal(); if ($("#screen-play").classList.contains("active")) $("#saisie").focus(); };
+    rendre();
+    setTimeout(function () { var c = $("#note-mot"); if (c) c.focus(); }, 50);
+  }
+
+  function ouvrirToutesNotes() {
+    var all = Store.toutesNotes(), lignes = [], vide = true;
+    mondesPrets().forEach(function (m) {
+      var arr = all[m.id]; if (!arr || !arr.length) return;
+      vide = false; lignes.push(m.titre + " : " + arr.join(", "));
+    });
+    var txt = vide ? "(aucune note — note des mots pendant une partie avec 📝)" : lignes.join("\n");
+    ouvrirModal(
+      '<h2 class="serif">📝 Mes mots notés</h2>' +
+      '<p style="color:var(--ink-soft)">Ta liste par image. <b>Copie-la et envoie-la-moi</b> : je l\'intègre au dictionnaire pour tous les joueurs.</p>' +
+      '<div class="carte-partage" style="text-align:left;max-height:240px;overflow:auto">' + esc(txt) + '</div>' +
+      '<div class="actions">' +
+      (vide ? '' : '<button class="btn ghost" id="notes-vider">Vider</button>') +
+      '<button class="btn ghost" id="notes-fermer">Fermer</button>' +
+      (vide ? '' : '<button class="btn green" id="notes-copier">📋 Copier</button>') + '</div>');
+    $("#notes-fermer").onclick = fermerModal;
+    var cp = $("#notes-copier"); if (cp) cp.onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("Copié !", "ok"); }); };
+    var vd = $("#notes-vider"); if (vd) vd.onclick = function () { if (confirm("Vider toutes tes notes ?")) { Store.viderNotes(); ouvrirToutesNotes(); } };
+  }
+
+  /* =========================================================
      MODE CRÉATEUR — ajouter des mots au dictionnaire de l'image
      ========================================================= */
   function ouvrirAjoutMot() {
@@ -834,6 +892,8 @@
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
     $("#play-quitter").onclick = function () { clearInterval(S.timer); montrer(S.mode === "duel" ? "home" : "map"); };
     $("#btn-add-mot").onclick = ouvrirAjoutMot;
+    $("#btn-note").onclick = ouvrirNote;
+    $("#btn-notes").onclick = ouvrirToutesNotes;
 
     // duel reveal
     $("#btn-valider-calls").onclick = validerCalls;

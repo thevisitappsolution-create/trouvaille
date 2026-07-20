@@ -16,6 +16,8 @@ const Store = (function () {
     progression: {},
     // mots ajoutés par le joueur/créateur, par monde : { mondeId: [ [mot, syn…], … ] }
     motsPerso: {},
+    // carnet de notes : objets repérés à envoyer pour enrichir le dico { mondeId: [mot, …] }
+    notes: {},
     reglages: { theme: "clair", sons: true, pub: true, consentPub: null, createur: false },
     stats: { partiesJouees: 0, motsTrouves: 0, meilleurScore: 0 },
     minutesJour: 0, joursActif: null
@@ -89,6 +91,16 @@ const Store = (function () {
       d.motsPerso[mondeId].push(entry); save();
     },
     tousMotsPerso: function () { return d.motsPerso; },
+
+    /* Carnet de notes (objets repérés en jouant, à m'envoyer) */
+    notes: function (mondeId) { return d.notes[mondeId] || []; },
+    ajouterNote: function (mondeId, mot) {
+      if (!d.notes[mondeId]) d.notes[mondeId] = [];
+      if (d.notes[mondeId].indexOf(mot) < 0) { d.notes[mondeId].push(mot); save(); }
+    },
+    retirerNote: function (mondeId, i) { if (d.notes[mondeId]) { d.notes[mondeId].splice(i, 1); save(); } },
+    toutesNotes: function () { return d.notes; },
+    viderNotes: function () { d.notes = {}; save(); },
 
     /* Réglages */
     reglages: function () { return d.reglages; },
