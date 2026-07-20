@@ -492,7 +492,7 @@ const MONDES = [
     titre: "La Caverne des Curiosités",
     sousTitre: "Boutique de curiosités · brocante enchantée",
     image: "ChatGPT Image 20 juil. 2026, 18_00_56.png",
-    pret: true,
+    pret: false, // désactivé pour le lancement (Bureau seul) — remettre true plus tard
     objets: OBJETS_CAVERNE
   },
   {
@@ -508,7 +508,7 @@ const MONDES = [
     titre: "La Classe des Mille Trouvailles",
     sousTitre: "Salle de classe foisonnante",
     image: "classe des mill trouvailles.png",
-    pret: true,
+    pret: false, // désactivé pour le lancement (Bureau seul)
     objets: OBJETS_CLASSE
   },
   {
@@ -516,7 +516,7 @@ const MONDES = [
     titre: "Le Parc des Trouvailles",
     sousTitre: "Pique-nique, jeux et plein air",
     image: "parc des trouvailles.png",
-    pret: true,
+    pret: false, // désactivé pour le lancement (Bureau seul)
     objets: OBJETS_PARC
   },
   {
@@ -524,7 +524,7 @@ const MONDES = [
     titre: "La Plage aux Trésors",
     sousTitre: "Sable, mer et chasse au trésor",
     image: "plage aux tresors.png",
-    pret: true,
+    pret: false, // désactivé pour le lancement (Bureau seul)
     objets: OBJETS_PLAGE
   }
 ];

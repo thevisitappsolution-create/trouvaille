@@ -405,6 +405,26 @@ h1.logo-txt { font-size: clamp(2rem, 8vw, 3rem); margin: 0; letter-spacing: .5px
   transition: transform .95s cubic-bezier(.2,.7,.3,1), opacity .95s ease;
 }
 
+/* Confettis / feux d'artifice de victoire */
+.confetti-host { position: absolute; inset: 0; z-index: 80; pointer-events: none; overflow: hidden; }
+.confetti-host i {
+  position: absolute; top: 24%; width: 9px; height: 14px; border-radius: 2px; opacity: 0;
+  animation: confetti 2.3s cubic-bezier(.15,.6,.3,1) forwards;
+}
+@keyframes confetti {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--rot)); }
+}
+.big-stars.gagne { animation: pop-stars .6s ease; }
+@keyframes pop-stars { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.25); } 100% { transform: scale(1); opacity: 1; } }
+
+/* Clavier ouvert : masque tout sauf l'image + la saisie (voir l'image en grand) */
+#screen-play.saisie-active .bonus-bar,
+#screen-play.saisie-active #play-objectif,
+#screen-play.saisie-active #play-hint,
+#screen-play.saisie-active .compteur,
+#screen-play.saisie-active .liste-mots { display: none; }
+
 /* décompte */
 .decompte { font-family: Georgia, serif; font-size: 7rem; font-weight: 900; color: var(--primary); animation: zdec .8s ease; }
 @keyframes zdec { from { transform: scale(2); opacity: 0; } to { transform: scale(1); opacity: 1; } }

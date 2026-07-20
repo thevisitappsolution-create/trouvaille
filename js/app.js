@@ -176,23 +176,23 @@
     var lettres = lettresDuMonde();
     var cont = $("#map-container"); cont.innerHTML = "";
 
-    // Déverrouillage robuste : tous les niveaux jusqu'à JUSTE APRÈS le plus
-    // avancé (évite les "verrouillés au milieu" quand le nb de lettres change).
-    var maxFait = -1;
-    lettres.forEach(function (L, i) { if (Store.etoiles(m.id, L) > 0) maxFait = i; });
-    var avatarPose = false; // l'avatar "Toi" n'apparaît que sur UN seul niveau
+    // Progression STRICTE : on fait les niveaux DANS L'ORDRE. On ne débloque
+    // que le premier niveau non complété ; les suivants restent verrouillés.
+    var premierTrou = lettres.length; // tout complété par défaut
+    for (var k = 0; k < lettres.length; k++) {
+      if (Store.etoiles(m.id, lettres[k]) === 0) { premierTrou = k; break; }
+    }
     lettres.forEach(function (L, i) {
+      var fait = i < premierTrou;       // complété (dans l'ordre)
+      var courant = i === premierTrou;  // à faire maintenant (avatar unique)
       var etoiles = Store.etoiles(m.id, L);
-      var debloque = i <= maxFait + 1;
-      var estCourant = debloque && etoiles === 0 && !avatarPose;
-      if (estCourant) avatarPose = true;
       var row = document.createElement("div");
       row.className = "map-row r" + (i % 3);
       var node = document.createElement("button");
-      node.className = "node " + (etoiles > 0 ? "done" : (debloque ? "current" : "locked"));
-      node.innerHTML = (etoiles > 0 ? '<span class="stars">' + "⭐".repeat(etoiles) + '</span>' : "") +
-        (i + 1) + (estCourant ? '<span class="me">' + (Store.profil().avatar || "😀") + '</span>' : "");
-      if (debloque) node.onclick = (function (LL, idx) { return function () { introNiveau(LL, idx); }; })(L, i);
+      node.className = "node " + (fait ? "done" : (courant ? "current" : "locked"));
+      node.innerHTML = (fait ? '<span class="stars">' + "⭐".repeat(etoiles) + '</span>' : "") +
+        (i + 1) + (courant ? '<span class="me">' + (Store.profil().avatar || "😀") + '</span>' : "");
+      if (fait || courant) node.onclick = (function (LL, idx) { return function () { introNiveau(LL, idx); }; })(L, i);
       row.appendChild(node); cont.appendChild(row);
       if (i < lettres.length - 1) { var conn = document.createElement("div"); conn.className = "connector"; conn.textContent = "·····"; cont.appendChild(conn); }
     });
@@ -217,11 +217,13 @@
   /* Seuils d'étoiles basés sur le temps (~15 s/mot pour 1★), proportionnels ;
      3★ = TOUS les mots. Ne révèle jamais le nombre de mots disponibles. */
   function seuilsEtoiles(avail) {
-    return {
-      s1: Math.min(avail, Math.max(1, Math.ceil(S.duree / 15))), // ~4 en 60 s
-      s2: Math.min(avail, Math.max(2, Math.ceil(S.duree / 10))), // ~6 en 60 s
-      s3: avail
-    };
+    // 1★ = passer facilement (~40% des mots, plafonné par le temps),
+    // 2★ ~70%, 3★ = tous. Toujours atteignable : 3 mots ne peuvent plus valoir 0★.
+    var cap1 = Math.max(1, Math.ceil(S.duree / 15)); // ~4 en 60 s
+    var cap2 = Math.max(2, Math.ceil(S.duree / 10)); // ~6 en 60 s
+    var s1 = Math.max(1, Math.min(avail, Math.ceil(avail * 0.4), cap1));
+    var s2 = Math.min(avail, Math.max(s1 + 1 <= avail ? s1 + 1 : s1, Math.min(Math.ceil(avail * 0.7), cap2)));
+    return { s1: s1, s2: s2, s3: avail };
   }
   function etoilesPour(found, avail) {
     var s = seuilsEtoiles(avail);
@@ -449,27 +451,73 @@
     var pieces = 5 + gainEtoiles * 10 + (record ? 5 : 0) + (tout && avail > 6 ? 15 : 0);
     Store.ajouterPieces(pieces);
 
+    var lettres = Engine.lettresValides(S.ctx, S.seuil);
+    var idxL = lettres.indexOf(L);
+    var aSuivant = stars >= 1 && idxL >= 0 && idxL < lettres.length - 1;
+    var titre = stars >= 3 ? "🎉 Parfait !" : stars === 2 ? "🌟 Bravo !" : stars === 1 ? "✅ Réussi !" : "Presque…";
+
     var html =
-      '<div class="big-stars">' + (stars ? "⭐".repeat(stars) + "☆".repeat(3 - stars) : "☆☆☆") + '</div>' +
-      '<h2 class="serif" style="text-align:center">' + (stars ? (tout ? "Parfait !" : "Niveau réussi !") : "Presque !") + '</h2>' +
-      (tout ? '<p style="text-align:center;color:var(--green-d);font-weight:800">🎉 Tous les mots trouvés !</p>' : '') +
+      '<div class="big-stars ' + (stars ? "gagne" : "") + '">' + (stars ? "⭐".repeat(stars) + "☆".repeat(3 - stars) : "☆☆☆") + '</div>' +
+      '<h2 class="serif" style="text-align:center">' + titre + '</h2>' +
+      (stars ? '<p style="text-align:center;color:var(--green-d);font-weight:800">' + (tout ? "🎉 Tous les mots trouvés !" : "Bien joué, niveau validé !") + '</p>'
+             : '<p style="text-align:center;color:var(--ink-soft)">Trouve 1 ou 2 mots de plus pour valider !</p>') +
       '<div class="result-line"><span>Mots trouvés</span><span class="v">' + trouves + '</span></div>' +
       '<div class="result-line"><span>Score</span><span class="v">' + S.scoreSolo + ' pts' + (record ? ' 🏅' : '') + '</span></div>' +
       '<div class="result-line"><span>Record</span><span class="v">' + Math.max(prevBest, S.scoreSolo) + ' pts</span></div>' +
       '<div class="result-line"><span>Pièces gagnées</span><span class="v gain">+' + pieces + ' 🪙</span></div>' +
       '<div class="actions" style="display:flex;gap:10px;margin-top:14px">' +
-      '<button class="btn coin" id="r-double">📺 ×2 pièces</button>' +
+      '<button class="btn ghost" id="r-quitter">Quitter</button>' +
       '<button class="btn ghost" id="r-rejouer">Rejouer</button>' +
-      '<button class="btn green" id="r-carte">Carte</button></div>';
+      (aSuivant ? '<button class="btn green" id="r-suivant">Suivant →</button>'
+                : '<button class="btn green" id="r-carte">Carte</button>') + '</div>' +
+      '<div class="actions" style="margin-top:8px"><button class="btn coin" id="r-double" style="width:100%">📺 Doubler mes pièces</button></div>';
     $("#result-content").innerHTML = html; montrer("result");
-    bip(stars ? 720 : 300);
 
-    $("#r-double").onclick = function () {
-      this.disabled = true;
+    if (stars >= 1) { confettis(stars); jingleVictoire(stars); } else { bip(300); }
+
+    var bDouble = $("#r-double");
+    bDouble.onclick = function () {
+      bDouble.disabled = true;
       Ads.rewarded().then(function (ok) { if (ok) { Store.ajouterPieces(pieces); majPieces(); toast("+" + pieces + " pièces ! 🪙", "coin"); } });
     };
+    $("#r-quitter").onclick = function () { Ads.interstitial(); montrer("map"); };
     $("#r-rejouer").onclick = function () { demarrerSolo(L, avail); };
-    $("#r-carte").onclick = function () { Ads.interstitial(); montrer("map"); };
+    var bSuiv = $("#r-suivant"); if (bSuiv) bSuiv.onclick = function () { niveauSuivant(L); };
+    var bCarte = $("#r-carte"); if (bCarte) bCarte.onclick = function () { Ads.interstitial(); montrer("map"); };
+  }
+
+  // Passe au niveau (lettre) suivant du monde, ou revient à la carte si dernier.
+  function niveauSuivant(Lcourante) {
+    var lettres = Engine.lettresValides(S.ctx, S.seuil);
+    var idx = lettres.indexOf(Lcourante);
+    if (idx >= 0 && idx < lettres.length - 1) {
+      var L = lettres[idx + 1];
+      demarrerSolo(L, Engine.nbObjetsPourLettre(S.ctx, L));
+    } else { montrer("map"); }
+  }
+
+  // Feux d'artifice / confettis + petit jingle de victoire.
+  function confettis(force) {
+    var n = 40 + (force || 1) * 28;
+    var couleurs = ["#6c5ce7", "#22c55e", "#f5b301", "#ff7a66", "#16c2b0", "#ff6fae", "#4aa3ff"];
+    var host = document.createElement("div"); host.className = "confetti-host";
+    for (var i = 0; i < n; i++) {
+      var p = document.createElement("i");
+      p.style.background = couleurs[i % couleurs.length];
+      p.style.left = (50 + (Math.random() * 2 - 1) * 42) + "%";
+      p.style.setProperty("--dx", ((Math.random() * 2 - 1) * 230) + "px");
+      p.style.setProperty("--dy", (220 + Math.random() * 470) + "px");
+      p.style.setProperty("--rot", (Math.random() * 960 - 480) + "deg");
+      p.style.animationDelay = (Math.random() * 0.22) + "s";
+      host.appendChild(p);
+    }
+    document.getElementById("app").appendChild(host);
+    setTimeout(function () { host.remove(); }, 2700);
+  }
+  function jingleVictoire(stars) {
+    if (Store.reglages().sons === false) return;
+    var notes = stars >= 3 ? [660, 880, 1175, 1568] : [660, 880, 1175];
+    notes.forEach(function (f, i) { setTimeout(function () { tone(f, 0.16, 0.06); }, i * 110); });
   }
 
   /* =========================================================
@@ -897,6 +945,10 @@
     // garde le focus de l'input (clavier ouvert) au tap sur "Go" sur mobile
     $("#btn-envoyer").addEventListener("mousedown", function (e) { e.preventDefault(); });
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
+    // clavier ouvert (mobile) -> on masque les icônes pour voir l'image en grand
+    var tactile = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+    $("#saisie").addEventListener("focus", function () { if (tactile) $("#screen-play").classList.add("saisie-active"); });
+    $("#saisie").addEventListener("blur", function () { $("#screen-play").classList.remove("saisie-active"); });
     $("#play-quitter").onclick = function () { clearInterval(S.timer); montrer(S.mode === "duel" ? "home" : "map"); };
     $("#btn-add-mot").onclick = ouvrirAjoutMot;
     $("#btn-note").onclick = ouvrirNote;

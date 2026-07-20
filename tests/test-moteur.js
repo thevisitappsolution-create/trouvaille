@@ -89,7 +89,7 @@ MONDES.forEach((m) => {
   console.log("  • " + m.titre.padEnd(34) + " objets:" + String(c.objets.length).padStart(3) +
     "  collisions:" + warns.length + "  seuil:" + seuil + "  lettres jouables:" + L.length +
     " (" + L.map((x) => x.toUpperCase()).join("") + ")");
-  ok(m.pret && c.objets.length > 0, "    " + m.id + " prêt et non vide");
+  ok(c.objets.length > 0, "    " + m.id + " non vide" + (m.pret ? " (actif)" : " (désactivé)"));
   ok(warns.length === 0, "    " + m.id + " sans collision de mots" +
     (warns.length ? " -> " + warns.join("; ") : ""));
   ok(L.length >= 3, "    " + m.id + " a au moins 3 lettres jouables");
