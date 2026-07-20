@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Trouvaille — 1 image · 1 lettre · 1 minute</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- ================= ACCUEIL ================= -->
+    <section class="screen active" id="screen-home">
+      <div class="wrap">
+        <h1 class="logo">Trouvaille</h1>
+        <p class="tagline">1 image · 1 lettre · 1 minute</p>
+
+        <div class="mondes" id="mondes"><!-- injecté par JS --></div>
+
+        <div class="reglages">
+          <div class="reglage">
+            <label>Mode de validation</label>
+            <div class="segments" data-cle="mode">
+              <button class="on" data-val="decouverte">Découverte</button>
+              <button data-val="confiance">Confiance · bluff</button>
+            </div>
+            <div class="aide-txt">Découverte : validation instantanée (idéal pour apprendre). Confiance : tes mots restent secrets, on joue au bluff (§9).</div>
+          </div>
+
+          <div class="reglage">
+            <label>Adversaire</label>
+            <div class="segments" data-cle="difficulte">
+              <button data-val="0.5">Facile</button>
+              <button class="on" data-val="0.8">Normal</button>
+              <button data-val="1">Corsé</button>
+            </div>
+          </div>
+
+          <div class="reglage">
+            <label>Durée d'une manche</label>
+            <div class="segments" data-cle="duree">
+              <button data-val="45">45 s</button>
+              <button class="on" data-val="60">60 s</button>
+              <button data-val="90">90 s</button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn grand" id="btn-jouer">▶ Jouer · 3 manches</button>
+        <div class="liens"><button class="lien" id="btn-aide">Comment jouer ?</button></div>
+        <div class="footer-note">Prototype · 5 mondes jouables · choisis-en un puis « Jouer »</div>
+      </div>
+    </section>
+
+    <!-- ================= JEU ================= -->
+    <section class="screen" id="screen-play">
+      <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span id="hud-manche" style="font-size:.85rem;color:var(--creme-doux);">Manche 1/3</span>
+        <span style="display:flex;gap:8px;">
+          <button id="btn-muet" class="btn fantome" style="padding:.4em .7em;font-size:1rem;">🔊</button>
+          <button id="btn-quitter" class="btn fantome" style="padding:.4em .7em;font-size:1rem;">✕</button>
+        </span>
+      </div>
+
+      <div class="hud">
+        <div class="lettre-badge" id="hud-lettre">A</div>
+        <div class="chrono" id="hud-chrono">
+          <div class="temps">60</div>
+          <div class="barre"><i></i></div>
+        </div>
+        <div class="score-mini" id="hud-score">Toi<b>0</b></div>
+      </div>
+
+      <div class="scene" id="scene">
+        <img id="scene-img" alt="Scène du jeu" />
+        <div class="scene-hint" id="scene-hint">✋ glisse pour explorer · molette pour zoomer</div>
+        <div class="zoom-ctrl">
+          <button id="zoom-plus" title="Zoom +">+</button>
+          <button id="zoom-moins" title="Zoom −">−</button>
+          <button id="zoom-reset" title="Réinitialiser">⤢</button>
+        </div>
+      </div>
+
+      <div class="saisie-zone">
+        <div class="saisie-ligne">
+          <input id="saisie" type="text" autocomplete="off" autocorrect="off"
+                 autocapitalize="off" spellcheck="false"
+                 placeholder="Un objet qui commence par la lettre…" />
+          <button class="btn" id="btn-envoyer">Go ↵</button>
+        </div>
+        <div class="compteur" id="compteur">0 mot saisi</div>
+        <div class="liste-mots" id="liste-mots"></div>
+      </div>
+    </section>
+
+    <!-- ================= RÉVÉLATION + CALL IMAGE ================= -->
+    <section class="screen" id="screen-reveal">
+      <div class="wrap">
+        <h2 style="text-align:center;font-family:Georgia,serif;color:var(--or-clair);margin:.2em 0;">
+          Révélation — lettre « <span id="rev-lettre">A</span> »
+        </h2>
+
+        <div class="rev-scores">
+          <div class="camp"><div class="nom">Toi</div><div class="val" id="rev-score-joueur">0</div></div>
+          <div class="vs">vs</div>
+          <div class="camp"><div class="nom">Bot</div><div class="val" id="rev-score-bot">0</div></div>
+        </div>
+
+        <div class="colonnes">
+          <div class="colonne" id="rev-joueur">
+            <h3>🧑 Tes trouvailles</h3>
+            <div class="pile"></div>
+          </div>
+          <div class="colonne" id="rev-bot">
+            <h3>🤖 Le bot réclame…</h3>
+            <div class="pile"></div>
+          </div>
+        </div>
+
+        <div class="call-info">
+          <b>Call Image ⚔</b> — un mot du bot te paraît <i>inventé</i> ? Touche-le pour le contester.
+          Si c'était un bluff, tu rafles ses points ; s'il était réel, c'est toi qui paies (§9.2).
+          Il te reste <span class="calls-restants" id="calls-restants">2</span> contestation(s).
+          <div id="call-journal"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn grand" id="btn-valider-calls">Passer</button>
+          <button class="btn grand" id="btn-suite-manche" style="display:none">Résultat de la manche →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= RÉSULTAT DE MANCHE ================= -->
+    <section class="screen" id="screen-manche">
+      <div class="wrap">
+        <div class="bloc">
+          <h2 id="manche-titre">Manche</h2>
+          <div id="manche-lignes"></div>
+        </div>
+        <div class="actions">
+          <button class="btn grand" id="btn-manche-suivante">Manche suivante →</button>
+          <button class="btn grand" id="btn-fin" style="display:none">Résultat final →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FIN DE PARTIE ================= -->
+    <section class="screen" id="screen-fin">
+      <div class="wrap">
+        <div id="verdict" class="verdict">—</div>
+        <div class="bloc"><div id="fin-lignes"></div></div>
+        <div class="bloc">
+          <div class="carte-partage" id="carte-partage"></div>
+          <div class="actions" style="margin-top:12px;">
+            <button class="btn fantome" id="btn-copier">📋 Copier le résultat</button>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn grand" id="btn-revanche">↻ Revanche</button>
+          <button class="btn fantome" id="btn-menu">Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= OVERLAYS ================= -->
+    <div class="overlay" id="overlay-decompte"><div class="decompte" id="decompte">3</div></div>
+
+    <div class="overlay" id="overlay-aide">
+      <div class="panneau-aide">
+        <h2>Comment jouer</h2>
+        <p><b>Une image, une lettre, 60 secondes.</b> Observe la scène et tape un maximum d'objets qui y sont visibles <b>et</b> qui commencent par la lettre imposée.</p>
+
+        <h3>Le barème (§8.2)</h3>
+        <ul>
+          <li><span class="pt">3 pts</span> — mot <b>unique</b> : tu es le seul à l'avoir vu.</li>
+          <li><span class="pt">1 pt</span> — mot <b>partagé</b> : l'adversaire l'a aussi.</li>
+        </ul>
+        <p>Voir ce que l'autre ne voit pas rapporte plus que la vitesse pure.</p>
+
+        <h3>Le Call Image ⚔ (§9)</h3>
+        <p>À la révélation, les mots ne sont pas vérifiés automatiquement : on se fait confiance… ou pas. Si un mot de l'adversaire te semble <i>inventé</i>, conteste-le :</p>
+        <ul>
+          <li>Le mot <b>était bien dans l'image</b> → tu avais tort, tu cèdes tes points.</li>
+          <li>Le mot <b>n'y était pas</b> → tu avais raison, tu rafles ses points.</li>
+        </ul>
+        <p><b>Celui qui a raison prend les points de celui qui a tort.</b> (2 contestations max par manche.)</p>
+
+        <h3>Astuce</h3>
+        <p>Zoome (molette / pincer) pour débusquer les petits objets. Un mot <span class="exemple">✓ vert</span> est reconnu ; un mot <span class="exemple">? ambre</span> est un pari : il peut être contesté !</p>
+
+        <div class="actions"><button class="btn grand" id="btn-fermer-aide">J'ai compris</button></div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

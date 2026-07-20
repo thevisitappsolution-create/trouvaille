@@ -1,0 +1,246 @@
+TITRE DE L’IMAGE : La Caverne des Curiosités
+
+DICTIONNAIRE OFFICIEL DES OBJETS
+Version 1.0 — inventaire de référence pour arbitrer les litiges
+
+RÈGLES D’UTILISATION
+1. Un mot est valide s’il figure dans la liste ci-dessous et si l’objet peut être montré sur l’image.
+2. Le singulier et le pluriel sont tous deux acceptés.
+3. Les variantes avec ou sans accent sont acceptées lorsqu’elles désignent clairement le même objet.
+4. Les synonymes séparés par « / » sont acceptés.
+5. Un terme trop général (« chose », « objet », « décoration », « meuble ») n’est pas accepté, sauf mention contraire.
+6. Les couleurs, matières et positions ne créent pas un nouvel objet : « lampe rouge » vaut « lampe ».
+7. Une partie d’objet n’est valide que si elle est nettement identifiable et listée séparément.
+8. En cas de doute persistant, la décision finale revient aux joueurs ou à l’arbitre.
+9. Certains petits éléments sont ambigus à cause de leur taille. Ils sont marqués « si identifié comme tel, sinon non retenu ».
+10. Cette liste décrit les éléments clairement visibles ou raisonnablement identifiables ; elle ne garantit pas chaque micro-détail décoratif.
+
+LISTE ALPHABÉTIQUE
+
+[A]
+- accordéon miniature (si identifié comme tel, sinon non retenu)
+- ampoule
+- ancre
+- appareil photo
+- arbre miniature
+- armillaire / sphère armillaire
+- arrosoir miniature
+- assiette
+- aéroplane / avion jouet
+
+[B]
+- ballon
+- ballon dirigeable miniature
+- banc miniature
+- bandeau
+- bijou
+- bocal
+- bol
+- bougie
+- boussole
+- bouteille
+- boîte
+- boîte à musique
+- buste
+
+[C]
+- cadenas
+- cage à oiseaux
+- caisse
+- canard en plastique
+- candélabre
+- carafe
+- carrousel
+- carte à jouer
+- casque
+- chapeau haut-de-forme
+- chat
+- chat bleu en peluche
+- chaussure miniature
+- cheval de carrousel
+- chouette
+- ciseaux
+- clavier de machine à écrire
+- cloche
+- clown / bouffon
+- clé
+- coffre
+- collier
+- coquillage
+- corbeille
+- couronne
+- cristal / boule de cristal
+- crâne
+- cuillère
+
+[D]
+- domino
+- drapeau
+- dé
+- décoration florale
+
+[E]
+- éventail
+
+[F]
+- fauteuil
+- feather / plume (mot anglais non retenu ; utiliser « plume »)
+- figurine
+- flacon
+- fleur
+- flûte miniature
+
+[G]
+- gant
+- globe terrestre
+- gobelet
+- gramophone
+- grappe de raisin
+
+[H]
+- hibou / chouette
+- horloge
+- hotte / panier
+- hélice
+
+[I]
+- instrument de musique (terme générique accepté seulement si les joueurs l’autorisent)
+
+[J]
+- jarre
+- jeu de cartes
+- jouet
+
+[K]
+- képi miniature
+
+[L]
+- lampe
+- lampe Tiffany / lampe en vitrail
+- lapin en peluche
+- livre
+- longue-vue
+- loupe
+- lunettes
+
+[M]
+- machine à écrire
+- maneki-neko / chat porte-bonheur
+- mannequin de couture
+- maquette de bateau
+- marionnette
+- masque
+- masque vénitien
+- matriochka / poupée russe
+- miroir
+- montgolfière
+- montre
+- médaille
+
+[N]
+- nœud
+
+[O]
+- oiseau
+- ours en peluche
+- œuf décoratif
+
+[P]
+- panier
+- paquet
+- parapluie miniature
+- pendule
+- perles
+- perroquet
+- piano miniature
+- pigeon / colombe
+- pinceau
+- pistolet à eau miniature (si identifié comme tel, sinon non retenu)
+- plante
+- plume
+- poche / pochette
+- poire
+- pomme
+- portrait
+- pot
+- pot à crayons
+- poupée
+- poupée gigogne
+- poupée lapin / lapin en peluche
+
+[Q]
+- quille miniature
+
+[R]
+- radio
+- raisin
+- renard jouet
+- robot jouet
+- rose
+- roue
+- ruban
+- réveil
+
+[S]
+- sablier
+- sac
+- sailboat / voilier (mot anglais non retenu ; utiliser « voilier »)
+- sculpture
+- serpent décoratif
+- singe jouet
+- soucoupe
+- sphère
+- squelette
+- statue
+- statuette
+- statuette de cerf
+
+[T]
+- table
+- tambour miniature
+- tasse
+- teddy bear (mot anglais non retenu ; utiliser « ours en peluche »)
+- théière
+- tirelire
+- toupie
+- train jouet
+- trompette miniature
+- télescope
+- téléviseur miniature
+
+[U]
+- urne
+
+[V]
+- vase
+- violon
+- voilier
+- voiture jouet
+
+[W]
+- wagon
+
+[X]
+- xylophone miniature (si identifié comme tel, sinon non retenu)
+
+[Y]
+- yoyo (si identifié comme tel, sinon non retenu)
+
+[Z]
+- zèbre jouet (si identifié comme tel, sinon non retenu)
+
+MOTS GÉNÉRIQUES NON RETENUS PAR DÉFAUT
+- affaire
+- bazar
+- bibelot
+- chose
+- décoration
+- élément
+- fourniture
+- matériel
+- meuble
+- objet
+- truc
+
+PRINCIPE D’ARBITRAGE
+Le joueur doit pouvoir désigner précisément l’objet sur l’image. Un mot absent du dictionnaire peut néanmoins être accepté à l’unanimité par les joueurs. En cas de désaccord, seuls les mots de ce document font foi.
