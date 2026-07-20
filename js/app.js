@@ -176,20 +176,25 @@
     var lettres = lettresDuMonde();
     var cont = $("#map-container"); cont.innerHTML = "";
 
-    var debloque = true; // niveau 1 toujours ouvert
+    // Déverrouillage robuste : tous les niveaux jusqu'à JUSTE APRÈS le plus
+    // avancé (évite les "verrouillés au milieu" quand le nb de lettres change).
+    var maxFait = -1;
+    lettres.forEach(function (L, i) { if (Store.etoiles(m.id, L) > 0) maxFait = i; });
+    var avatarPose = false; // l'avatar "Toi" n'apparaît que sur UN seul niveau
     lettres.forEach(function (L, i) {
       var etoiles = Store.etoiles(m.id, L);
-      var etatDeblo = debloque;
+      var debloque = i <= maxFait + 1;
+      var estCourant = debloque && etoiles === 0 && !avatarPose;
+      if (estCourant) avatarPose = true;
       var row = document.createElement("div");
       row.className = "map-row r" + (i % 3);
       var node = document.createElement("button");
-      node.className = "node " + (etoiles > 0 ? "done" : (etatDeblo ? "current" : "locked"));
+      node.className = "node " + (etoiles > 0 ? "done" : (debloque ? "current" : "locked"));
       node.innerHTML = (etoiles > 0 ? '<span class="stars">' + "⭐".repeat(etoiles) + '</span>' : "") +
-        (i + 1) + (etatDeblo && etoiles === 0 ? '<span class="me">' + (Store.profil().avatar || "😀") + '</span>' : "");
-      if (etatDeblo) node.onclick = (function (LL, idx) { return function () { introNiveau(LL, idx); }; })(L, i);
+        (i + 1) + (estCourant ? '<span class="me">' + (Store.profil().avatar || "😀") + '</span>' : "");
+      if (debloque) node.onclick = (function (LL, idx) { return function () { introNiveau(LL, idx); }; })(L, i);
       row.appendChild(node); cont.appendChild(row);
       if (i < lettres.length - 1) { var conn = document.createElement("div"); conn.className = "connector"; conn.textContent = "·····"; cont.appendChild(conn); }
-      debloque = etoiles > 0; // niveau suivant ouvert si celui-ci a ≥1 étoile
     });
   }
 
