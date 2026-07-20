@@ -8,6 +8,7 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var ENJEU = 3, CALLS = 2;
+  var VERSION_APP = "2.5.4"; // affichée dans Réglages ; à bumper à chaque déploiement
 
   var S = {
     mondeIndex: 0, ctx: null, seuil: 5,
@@ -660,7 +661,7 @@
     $("#sw-createur").classList.toggle("on", rg.createur === true);
     $("#row-createur").style.display = rg.createur ? "" : "none";
     $("#row-export").style.display = rg.createur ? "" : "none";
-    $("#reglages-version").textContent = "Trouvaille v2 · " + (Ads.estNatif() ? "app native" : "web") + " · " + Ads.plateforme();
+    $("#reglages-version").textContent = "Trouvaille v" + VERSION_APP + " · " + (Ads.estNatif() ? "app" : "web") + " · " + Ads.plateforme();
   }
 
   /* =========================================================
@@ -1008,6 +1009,18 @@
     });
     $("#btn-aide").onclick = function () { S.obStep = 1; montrer("onboarding"); rendreOnboarding(); $("#ob-passer").textContent = "Fermer"; };
     $("#btn-reset").onclick = function () { if (confirm("Effacer ta progression et tes pièces ?")) { Store.reset(); appliquerTheme(); S.obStep = 0; rendreOnboarding(); montrer("onboarding"); } };
+    // Forcer la mise à jour : vide le cache + le service worker, puis recharge.
+    // NE touche PAS à la progression (localStorage conservé).
+    $("#btn-maj").onclick = function () {
+      toast("Mise à jour en cours…", "");
+      var taches = [];
+      try { if (window.caches) taches.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })); } catch (e) {}
+      try { if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) taches.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); })); } catch (e) {}
+      Promise.all(taches).catch(function () {}).then(function () {
+        var base = location.href.split("?")[0].split("#")[0];
+        location.replace(base + "?maj=" + Date.now());
+      });
+    };
 
     function demarrer() {
       // hook de développement : index.html?dev=home|map|play|boutique…

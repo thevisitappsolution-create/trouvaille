@@ -1,6 +1,6 @@
 /* Trouvaille — Service Worker (PWA installable + hors-ligne)
    Ne s'active que sur https:// (github.io), pas en file://. */
-var VERSION = "trouvaille-v2.5.3";
+var VERSION = "trouvaille-v2.5.4";
 var CORE = [
   "./",
   "./index.html",
@@ -48,9 +48,17 @@ self.addEventListener("fetch", function (e) {
       return hit || fetch(req).then(function (res) { return metEnCache(req, res); });
     }));
   } else {
-    // Code / données (html, css, js, json) : RÉSEAU D'ABORD -> toujours à jour ;
-    // cache seulement en secours (hors-ligne). Fini les mises à jour bloquées.
-    e.respondWith(fetch(req).then(function (res) { return metEnCache(req, res); })
-      .catch(function () { return caches.match(req).then(function (hit) { return hit || caches.match("./index.html"); }); }));
+    // Code / données : RÉSEAU D'ABORD avec TIMEOUT (3 s). Si le réseau traîne
+    // (mobile lent), on sert le cache pour que l'app charge toujours vite ;
+    // sinon on renvoie la version fraîche. Fini les "ne charge pas".
+    e.respondWith(new Promise(function (resolve) {
+      var done = false;
+      function secours() { caches.match(req).then(function (hit) { resolve(hit || caches.match("./index.html")); }); }
+      var t = setTimeout(function () { if (!done) { done = true; secours(); } }, 3000);
+      fetch(req).then(function (res) {
+        if (done) { metEnCache(req, res); return; }
+        done = true; clearTimeout(t); metEnCache(req, res); resolve(res);
+      }, function () { if (!done) { done = true; clearTimeout(t); secours(); } });
+    }));
   }
 });
