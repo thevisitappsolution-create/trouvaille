@@ -418,12 +418,20 @@ h1.logo-txt { font-size: clamp(2rem, 8vw, 3rem); margin: 0; letter-spacing: .5px
 .big-stars.gagne { animation: pop-stars .6s ease; }
 @keyframes pop-stars { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.25); } 100% { transform: scale(1); opacity: 1; } }
 
-/* Clavier ouvert : masque tout sauf l'image + la saisie (voir l'image en grand) */
+/* Clavier ouvert : l'image occupe TOUT l'espace, la saisie (en grand) juste
+   au-dessus du clavier. On masque le reste ; l'app est recalée sur la zone
+   visible par visualViewport (JS) -> plus d'espace vide. */
+#screen-play.saisie-active .play-head,
 #screen-play.saisie-active .bonus-bar,
 #screen-play.saisie-active #play-objectif,
 #screen-play.saisie-active #play-hint,
 #screen-play.saisie-active .compteur,
 #screen-play.saisie-active .liste-mots { display: none; }
+#screen-play.saisie-active { padding-top: 6px; padding-bottom: 6px; }
+#screen-play.saisie-active .scene { min-height: 120px; }
+#screen-play.saisie-active .saisie-zone { margin-top: 8px; }
+#screen-play.saisie-active #saisie { font-size: 1.25rem; padding: .95em 1.1em; }
+#app { transform-origin: top center; }
 
 /* décompte */
 .decompte { font-family: Georgia, serif; font-size: 7rem; font-weight: 900; color: var(--primary); animation: zdec .8s ease; }

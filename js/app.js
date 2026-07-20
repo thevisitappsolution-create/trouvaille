@@ -689,6 +689,15 @@
     vue.ty = h <= ch ? (ch - h) / 2 : Math.min(0, Math.max(ch - h, vue.ty));
   }
   function appliquer() { clampPan(); $("#scene-img").style.transform = "translate(" + vue.tx + "px," + vue.ty + "px) scale(" + vue.scale + ")"; }
+
+  // Recale l'app sur la zone réellement visible (au-dessus du clavier mobile).
+  function ajusterViewport() {
+    var vv = window.visualViewport; if (!vv) return;
+    var app = document.getElementById("app");
+    app.style.height = Math.round(vv.height) + "px";
+    app.style.transform = vv.offsetTop ? "translateY(" + Math.round(vv.offsetTop) + "px)" : "none";
+    if ($("#screen-play").classList.contains("active") && vue.iw) ajusterVue();
+  }
   function zoomVers(cx, cy, f) {
     var r = $("#scene").getBoundingClientRect(), px = cx - r.left, py = cy - r.top;
     var ns = Math.min(vue.min * 6, Math.max(vue.min, vue.scale * f)), k = ns / vue.scale;
@@ -954,8 +963,15 @@
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
     // clavier ouvert (mobile) -> on masque les icônes pour voir l'image en grand
     var tactile = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
-    $("#saisie").addEventListener("focus", function () { if (tactile) $("#screen-play").classList.add("saisie-active"); });
-    $("#saisie").addEventListener("blur", function () { $("#screen-play").classList.remove("saisie-active"); });
+    $("#saisie").addEventListener("focus", function () { if (tactile) { $("#screen-play").classList.add("saisie-active"); ajusterViewport(); } });
+    $("#saisie").addEventListener("blur", function () { $("#screen-play").classList.remove("saisie-active"); setTimeout(ajusterViewport, 50); });
+
+    // Cale l'app sur la ZONE VISIBLE (au-dessus du clavier) : plus d'espace vide,
+    // l'image remplit tout, la saisie est juste au-dessus du clavier.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", ajusterViewport);
+      window.visualViewport.addEventListener("scroll", ajusterViewport);
+    }
     $("#play-quitter").onclick = function () { clearInterval(S.timer); montrer(S.mode === "duel" ? "home" : "map"); };
     $("#btn-add-mot").onclick = ouvrirAjoutMot;
     $("#btn-note").onclick = ouvrirNote;
