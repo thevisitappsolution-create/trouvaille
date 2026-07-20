@@ -141,9 +141,16 @@
      ========================================================= */
   function mondesPrets() { return MONDES.filter(function (m) { return m.pret; }); }
 
+  // objets du monde + mots ajoutés localement (créateur). Ordre stable :
+  // base d'abord, ajouts ensuite (les objId des mots de base ne bougent pas).
+  function objetsEffectifs(m) {
+    var perso = Store.motsPerso(m.id).map(function (e) { return { mots: e }; });
+    return m.objets.concat(perso);
+  }
   function compilerMonde(idx) {
     var m = mondesPrets()[idx];
-    S.mondeIndex = idx; S.ctx = Engine.compile(m);
+    S.mondeIndex = idx;
+    S.ctx = Engine.compile({ id: m.id, titre: m.titre, image: m.image, objets: objetsEffectifs(m) });
     S.seuil = Engine.seuilAdaptatif(S.ctx, 4);
     return m;
   }
@@ -243,6 +250,7 @@
     $("#play-pts").textContent = "0 pts";
     $("#play-hint").style.display = "none";
     $("#saisie").value = ""; $("#saisie").disabled = true;
+    $("#btn-add-mot").style.display = Store.reglages().createur ? "" : "none";
     preparerScene(); rendreBonusBar();
     // décompte
     var ov = $("#overlay-decompte"), el = $("#decompte"); ov.classList.add("active");
@@ -282,18 +290,21 @@
     $("#fuse-row").classList.toggle("urgent", S.restant <= 10);
   }
 
-  function soumettre() {
-    var input = $("#saisie"), brut = input.value; if (!brut.trim()) return;
+  function soumettre(motAuto) {
+    var input = $("#saisie");
+    var auto = motAuto != null;
+    var brut = auto ? motAuto : input.value;
+    if (!String(brut).trim()) return;
     var res = Engine.classer(S.ctx, brut, S.lettre, { floue: true });
 
     // Aucune pénalité : un mauvais mot est simplement ignoré (petit shake).
-    if (res.statut === "rejet") { secoue(input); return; }
+    if (res.statut === "rejet") { if (!auto) secoue(input); return; }
 
     var claim = res.statut === "valide" ? { objId: res.objId, display: res.display } : { key: res.key, display: res.display };
     var cle = Engine.cleUnicite(claim);
-    input.value = "";
+    if (!auto) input.value = "";
 
-    if (S.clesJoueur.has(cle)) { secoue(input); return; } // déjà joué : ignoré, sans pénalité
+    if (S.clesJoueur.has(cle)) { if (!auto) secoue(input); return; } // déjà joué : ignoré, sans pénalité
 
     if (res.statut === "reclame") { // bonne lettre mais pas dans la liste
       if (S.mode === "solo") { secoue(input); return; } // ignoré, aucune pénalité
@@ -574,6 +585,7 @@
     $("#sw-theme").classList.toggle("on", rg.theme === "sombre");
     $("#sw-sons").classList.toggle("on", rg.sons !== false);
     $("#sw-pub").classList.toggle("on", rg.pub !== false);
+    $("#sw-createur").classList.toggle("on", rg.createur === true);
     $("#reglages-version").textContent = "Trouvaille v2 · " + (Ads.estNatif() ? "app native" : "web") + " · " + Ads.plateforme();
   }
 
@@ -700,6 +712,58 @@
   }
 
   /* =========================================================
+     MODE CRÉATEUR — ajouter des mots au dictionnaire de l'image
+     ========================================================= */
+  function ouvrirAjoutMot() {
+    var L = S.lettre.toUpperCase();
+    ouvrirModal(
+      '<h2 class="serif">➕ Ajouter un mot</h2>' +
+      '<p style="color:var(--ink-soft)">Un objet visible sur l\'image qui commence par « ' + L + ' ». ' +
+      'Il devient valable tout de suite (et pour tous après publication).</p>' +
+      '<input class="field" id="am-mot" placeholder="Mot (commence par ' + L + ')" autocomplete="off" autocapitalize="off">' +
+      '<input class="field" id="am-syn" placeholder="Synonymes, séparés par des virgules (optionnel)">' +
+      '<div class="actions"><button class="btn ghost" id="am-annuler">Annuler</button>' +
+      '<button class="btn green" id="am-ok">Ajouter</button></div>');
+    var champ = $("#am-mot"); if (champ) setTimeout(function () { champ.focus(); }, 50);
+    $("#am-annuler").onclick = function () { fermerModal(); $("#saisie").focus(); };
+    function valider() {
+      var mot = ($("#am-mot").value || "").trim();
+      if (!mot) { toast("Écris un mot", "non"); return; }
+      var n = Engine.normalize(mot);
+      if (n.length < 2) { toast("Trop court", "non"); return; }
+      if (n[0] !== Engine.normalize(S.lettre)) { toast("Doit commencer par « " + L + " »", "non"); return; }
+      if (Engine.classer(S.ctx, mot, S.lettre, { floue: false }).statut === "valide") { toast("« " + mot + " » est déjà valable", "non"); fermerModal(); return; }
+      var syns = ($("#am-syn").value || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      var m = mondesPrets()[S.mondeIndex];
+      Store.ajouterMotPerso(m.id, [mot].concat(syns));
+      compilerMonde(S.mondeIndex);                       // recompile avec le nouveau mot
+      S.soloAvail = Engine.nbObjetsPourLettre(S.ctx, S.lettre);
+      fermerModal();
+      toast("« " + mot + " » ajouté 🎉", "ok");
+      soumettre(mot);                                    // compté comme trouvé
+    }
+    $("#am-ok").onclick = valider;
+    $("#am-mot").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); valider(); } });
+  }
+
+  function exporterMots() {
+    var all = Store.tousMotsPerso(), lignes = [];
+    Object.keys(all).forEach(function (mid) {
+      if (!all[mid] || !all[mid].length) return;
+      lignes.push("// " + mid + " — à coller dans OBJETS_" + mid.toUpperCase() + " :");
+      all[mid].forEach(function (e) { lignes.push('  { mots: ["' + e.join('", "') + '"] },'); });
+    });
+    var txt = lignes.length ? lignes.join("\n") : "(aucun mot ajouté pour l'instant)";
+    ouvrirModal(
+      '<h2 class="serif">📤 Exporter mes mots</h2>' +
+      '<p style="color:var(--ink-soft)">Colle ces lignes dans <b>js/data.js</b> (le bon <b>OBJETS_*</b>) ou envoie-les-moi, puis redéploie : tous les joueurs les auront.</p>' +
+      '<div class="carte-partage" style="text-align:left;max-height:220px;overflow:auto">' + esc(txt) + '</div>' +
+      '<div class="actions"><button class="btn ghost" id="ex-close">Fermer</button><button class="btn green" id="ex-copy">📋 Copier</button></div>');
+    $("#ex-close").onclick = fermerModal;
+    $("#ex-copy").onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("Copié !", "ok"); }); };
+  }
+
+  /* =========================================================
      INIT
      ========================================================= */
   function appliquerTheme() { document.documentElement.setAttribute("data-theme", Store.reglages().theme === "sombre" ? "dark" : "light"); }
@@ -733,6 +797,7 @@
     $("#btn-envoyer").onclick = soumettre;
     $("#saisie").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); soumettre(); } });
     $("#play-quitter").onclick = function () { clearInterval(S.timer); montrer(S.mode === "duel" ? "home" : "map"); };
+    $("#btn-add-mot").onclick = ouvrirAjoutMot;
 
     // duel reveal
     $("#btn-valider-calls").onclick = validerCalls;
@@ -750,6 +815,8 @@
     $("#sw-theme").onclick = function () { var v = Store.reglages().theme === "sombre" ? "clair" : "sombre"; Store.setReglage("theme", v); appliquerTheme(); this.classList.toggle("on", v === "sombre"); };
     $("#sw-sons").onclick = function () { var v = !(Store.reglages().sons !== false); Store.setReglage("sons", v); this.classList.toggle("on", v); };
     $("#sw-pub").onclick = function () { var v = !(Store.reglages().pub !== false); Store.setReglage("pub", v); this.classList.toggle("on", v); Ads.banner(v && $("#screen-home").classList.contains("active")); };
+    $("#sw-createur").onclick = function () { var v = !(Store.reglages().createur === true); Store.setReglage("createur", v); this.classList.toggle("on", v); toast(v ? "Mode créateur activé 🛠️" : "Mode créateur désactivé", v ? "ok" : ""); };
+    $("#btn-export").onclick = exporterMots;
     $("#btn-aide").onclick = function () { S.obStep = 1; montrer("onboarding"); rendreOnboarding(); $("#ob-passer").textContent = "Fermer"; };
     $("#btn-reset").onclick = function () { if (confirm("Effacer ta progression et tes pièces ?")) { Store.reset(); appliquerTheme(); S.obStep = 0; rendreOnboarding(); montrer("onboarding"); } };
 

@@ -22,6 +22,33 @@
 - **Boutique / Banque** (économie de pièces, vidéo récompensée), **Classement**, **Réglages** (thème clair/sombre, sons, pub).
 - **5 mondes** : Caverne, Bureau, Classe, Parc, Plage — chacun bâti sur ton image + ton dictionnaire.
 
+## ✍️ Ajouter des mots à une image
+
+Deux méthodes.
+
+**A. En jeu (rapide, mode créateur)**
+1. Réglages → active **🛠️ Mode créateur**.
+2. Lance un niveau : un bouton **➕ mot** apparaît en haut.
+3. Tape un objet visible commençant par la lettre de la manche → il devient
+   **valable immédiatement** et est **compté comme trouvé**. Il est mémorisé
+   sur ton appareil (tu le retrouveras aux prochaines parties).
+4. Pour le donner à **tous les joueurs** : Réglages → **📤 Exporter mes mots**,
+   copie les lignes, colle-les dans `js/data.js` (le bon `OBJETS_*`) — ou envoie-les-moi —
+   puis redéploie (`git push`).
+
+**B. Directement dans le dictionnaire (permanent, pour tous)**
+Édite `js/data.js` et ajoute une entrée dans le bon `OBJETS_*` :
+```js
+{ mots: ["lunettes"] },                 // un objet
+{ mots: ["lèvres", "bouche"] },         // avec synonymes
+```
+> Chaque mot est indexé sous sa 1re lettre. Singulier/pluriel et accents sont gérés.
+> Après édition, lance `node tests/test-moteur.js` pour vérifier qu'il n'y a pas de collision.
+
+> Rappel de règle : dès que **tous** les mots d'un niveau sont trouvés, la manche
+> se termine (même s'il reste du temps) et tu passes au suivant. Plus il y a de mots
+> valides, plus le niveau est riche — d'où l'intérêt d'en ajouter.
+
 ## 🗂️ Code
 ```
 index.html            Écrans (onboarding, accueil, carte, jeu, duel, boutique…)

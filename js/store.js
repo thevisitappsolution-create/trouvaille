@@ -14,7 +14,9 @@ const Store = (function () {
     bonus: { joker: 3, lettre: 3, plus15: 2 },
     // progression Conquête : { "mondeId:lettre": { etoiles: 0..3, best: score } }
     progression: {},
-    reglages: { theme: "clair", sons: true, pub: true, consentPub: null },
+    // mots ajoutés par le joueur/créateur, par monde : { mondeId: [ [mot, syn…], … ] }
+    motsPerso: {},
+    reglages: { theme: "clair", sons: true, pub: true, consentPub: null, createur: false },
     stats: { partiesJouees: 0, motsTrouves: 0, meilleurScore: 0 },
     minutesJour: 0, joursActif: null
   };
@@ -79,6 +81,14 @@ const Store = (function () {
       if (score > d.stats.meilleurScore) d.stats.meilleurScore = score;
       save();
     },
+
+    /* Mots ajoutés par le joueur/créateur */
+    motsPerso: function (mondeId) { return d.motsPerso[mondeId] || []; },
+    ajouterMotPerso: function (mondeId, entry) {
+      if (!d.motsPerso[mondeId]) d.motsPerso[mondeId] = [];
+      d.motsPerso[mondeId].push(entry); save();
+    },
+    tousMotsPerso: function () { return d.motsPerso; },
 
     /* Réglages */
     reglages: function () { return d.reglages; },
