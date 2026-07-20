@@ -68,6 +68,31 @@ npm run cap:ios       # ouvre Xcode (Mac) -> Run
 - [ ] **Version** : `version` dans `package.json` + versionCode/CFBundleVersion natifs.
 - [ ] **Signature** : keystore Android, certificat/profil Apple.
 
+## 5 bis. Partage des mots entre joueurs (mode créateur)
+
+Le jeu peut charger des mots ajoutés par le créateur pour **tous les joueurs**,
+sans redéploiement, via le fichier `mots-partages.json` du dépôt.
+
+**Comment ça marche**
+- **Lecture (tous)** : au démarrage, l'app télécharge `mots-partages.json` (public,
+  aucune clé). Ces mots s'ajoutent aux dictionnaires de chacun.
+- **Écriture (toi)** : dans le jeu, **Réglages → tape 5× la ligne de version** pour
+  débloquer le **Mode créateur** (caché). Un bouton **➕ mot** apparaît en partie.
+  Pour publier en ligne, colle un **jeton GitHub** dans *Réglages → Publier / exporter*.
+
+**Créer le jeton GitHub (une seule fois)**
+1. GitHub → *Settings → Developer settings → Fine-grained tokens → Generate new token*.
+2. **Repository access** : *Only select repositories* → `trouvaille`.
+3. **Permissions → Repository → Contents : Read and write**.
+4. Génère, copie le jeton, colle-le dans l'app (Réglages → Publier / exporter → Enregistrer).
+   → Le jeton reste **sur ton appareil** (localStorage), jamais dans le code.
+
+Ensuite, chaque **➕ mot** ajouté écrit dans `mots-partages.json` (commit automatique) :
+les autres joueurs l'auront à leur prochaine ouverture. Sans jeton, l'ajout reste local
+et tu peux publier manuellement (bouton **Copier** → coller dans `js/data.js`).
+
+> Config du dépôt : `js/config.js` (`partageRepo`). Si tu changes de dépôt/URL, adapte-le.
+
 ## 6. Mettre à jour l'app
 Après une modif du jeu :
 ```bash

@@ -141,11 +141,23 @@
      ========================================================= */
   function mondesPrets() { return MONDES.filter(function (m) { return m.pret; }); }
 
-  // objets du monde + mots ajoutés localement (créateur). Ordre stable :
-  // base d'abord, ajouts ensuite (les objId des mots de base ne bougent pas).
+  // objets du monde + mots PARTAGÉS (en ligne, pour tous) + mots LOCAUX.
+  // Ajouts uniquement en fin de liste (objId de base stables) et dédoublonnés
+  // par 1er mot (un mot partagé + local identique n'apparaît qu'une fois).
   function objetsEffectifs(m) {
-    var perso = Store.motsPerso(m.id).map(function (e) { return { mots: e }; });
-    return m.objets.concat(perso);
+    var out = m.objets.slice(), vus = {};
+    m.objets.forEach(function (o) { o.mots.forEach(function (w) { vus[Engine.normalize(w)] = 1; }); });
+    function ajoute(entries) {
+      (entries || []).forEach(function (e) {
+        if (!e || !e.length) return;
+        var k = Engine.normalize(e[0]);
+        if (!k || vus[k]) return;
+        vus[k] = 1; out.push({ mots: e });
+      });
+    }
+    ajoute(typeof Sync !== "undefined" ? Sync.motsPartages(m.id) : []);
+    ajoute(Store.motsPerso(m.id));
+    return out;
   }
   function compilerMonde(idx) {
     var m = mondesPrets()[idx];
@@ -586,6 +598,8 @@
     $("#sw-sons").classList.toggle("on", rg.sons !== false);
     $("#sw-pub").classList.toggle("on", rg.pub !== false);
     $("#sw-createur").classList.toggle("on", rg.createur === true);
+    $("#row-createur").style.display = rg.createur ? "" : "none";
+    $("#row-export").style.display = rg.createur ? "" : "none";
     $("#reglages-version").textContent = "Trouvaille v2 · " + (Ads.estNatif() ? "app native" : "web") + " · " + Ads.plateforme();
   }
 
@@ -735,12 +749,20 @@
       if (Engine.classer(S.ctx, mot, S.lettre, { floue: false }).statut === "valide") { toast("« " + mot + " » est déjà valable", "non"); fermerModal(); return; }
       var syns = ($("#am-syn").value || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
       var m = mondesPrets()[S.mondeIndex];
-      Store.ajouterMotPerso(m.id, [mot].concat(syns));
+      var entry = [mot].concat(syns);
+      Store.ajouterMotPerso(m.id, entry);
       compilerMonde(S.mondeIndex);                       // recompile avec le nouveau mot
       S.soloAvail = Engine.nbObjetsPourLettre(S.ctx, S.lettre);
       fermerModal();
-      toast("« " + mot + " » ajouté 🎉", "ok");
       soumettre(mot);                                    // compté comme trouvé
+      // publication en ligne (pour TOUS les joueurs) si un jeton est configuré
+      if (Sync.aCle()) {
+        toast("« " + mot + " » ajouté — publication…", "ok");
+        Sync.publier(m.id, entry).then(function () { toast("Publié pour tous ✅", "ok"); })
+          .catch(function () { toast("Ajouté ici ; publication en ligne échouée", "non"); });
+      } else {
+        toast("« " + mot + " » ajouté (sur cet appareil) 🎉", "ok");
+      }
     }
     $("#am-ok").onclick = valider;
     $("#am-mot").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); valider(); } });
@@ -754,13 +776,27 @@
       all[mid].forEach(function (e) { lignes.push('  { mots: ["' + e.join('", "') + '"] },'); });
     });
     var txt = lignes.length ? lignes.join("\n") : "(aucun mot ajouté pour l'instant)";
+    var actif = Sync.aCle();
     ouvrirModal(
-      '<h2 class="serif">📤 Exporter mes mots</h2>' +
-      '<p style="color:var(--ink-soft)">Colle ces lignes dans <b>js/data.js</b> (le bon <b>OBJETS_*</b>) ou envoie-les-moi, puis redéploie : tous les joueurs les auront.</p>' +
-      '<div class="carte-partage" style="text-align:left;max-height:220px;overflow:auto">' + esc(txt) + '</div>' +
+      '<h2 class="serif">📤 Publier / exporter</h2>' +
+      '<p style="color:var(--ink-soft)">Publication en ligne (pour <b>tous</b> les joueurs) : ' +
+        (actif ? '<b style="color:var(--green-d)">active ✅</b>' : '<b style="color:var(--coral)">inactive</b>') + '</p>' +
+      '<input class="field" id="ex-pat" type="password" placeholder="Jeton GitHub (une seule fois)" value="' + (actif ? "••••••••••" : "") + '">' +
+      '<div class="actions" style="margin-bottom:8px">' +
+        '<button class="btn ghost sm" id="ex-pat-save">Enregistrer le jeton</button>' +
+        (actif ? '<button class="btn ghost sm" id="ex-pat-clear">Retirer</button>' : '') + '</div>' +
+      '<p style="color:var(--ink-soft);font-size:.82rem">Le jeton reste sur <b>cet appareil</b> (jamais partagé). Voir STORES.md pour le créer. ' +
+        'Sans jeton, tu peux publier manuellement : copie ci-dessous dans <b>js/data.js</b>.</p>' +
+      '<div class="carte-partage" style="text-align:left;max-height:160px;overflow:auto">' + esc(txt) + '</div>' +
       '<div class="actions"><button class="btn ghost" id="ex-close">Fermer</button><button class="btn green" id="ex-copy">📋 Copier</button></div>');
     $("#ex-close").onclick = fermerModal;
     $("#ex-copy").onclick = function () { if (navigator.clipboard) navigator.clipboard.writeText(txt).then(function () { toast("Copié !", "ok"); }); };
+    $("#ex-pat-save").onclick = function () {
+      var v = ($("#ex-pat").value || "").trim();
+      if (!v || v.indexOf("•") === 0) { toast("Colle un jeton valide", "non"); return; }
+      Sync.setCle(v); toast("Jeton enregistré ✅ publication activée", "ok"); exporterMots();
+    };
+    var clr = $("#ex-pat-clear"); if (clr) clr.onclick = function () { Sync.setCle(""); toast("Jeton retiré", ""); exporterMots(); };
   }
 
   /* =========================================================
@@ -815,25 +851,38 @@
     $("#sw-theme").onclick = function () { var v = Store.reglages().theme === "sombre" ? "clair" : "sombre"; Store.setReglage("theme", v); appliquerTheme(); this.classList.toggle("on", v === "sombre"); };
     $("#sw-sons").onclick = function () { var v = !(Store.reglages().sons !== false); Store.setReglage("sons", v); this.classList.toggle("on", v); };
     $("#sw-pub").onclick = function () { var v = !(Store.reglages().pub !== false); Store.setReglage("pub", v); this.classList.toggle("on", v); Ads.banner(v && $("#screen-home").classList.contains("active")); };
-    $("#sw-createur").onclick = function () { var v = !(Store.reglages().createur === true); Store.setReglage("createur", v); this.classList.toggle("on", v); toast(v ? "Mode créateur activé 🛠️" : "Mode créateur désactivé", v ? "ok" : ""); };
+    $("#sw-createur").onclick = function () { var v = !(Store.reglages().createur === true); Store.setReglage("createur", v); rendreReglages(); toast(v ? "Mode créateur activé 🛠️" : "Mode créateur désactivé", v ? "ok" : ""); };
     $("#btn-export").onclick = exporterMots;
+    // Déblocage CACHÉ du mode créateur : taper 5× la ligne de version.
+    var tapCrea = 0, tapCreaT = null;
+    $("#reglages-version").addEventListener("click", function () {
+      tapCrea++; clearTimeout(tapCreaT); tapCreaT = setTimeout(function () { tapCrea = 0; }, 1500);
+      if (tapCrea >= 5) {
+        tapCrea = 0;
+        var v = !(Store.reglages().createur === true);
+        Store.setReglage("createur", v); rendreReglages();
+        toast(v ? "🛠️ Mode créateur débloqué" : "Mode créateur masqué", v ? "ok" : "");
+      }
+    });
     $("#btn-aide").onclick = function () { S.obStep = 1; montrer("onboarding"); rendreOnboarding(); $("#ob-passer").textContent = "Fermer"; };
     $("#btn-reset").onclick = function () { if (confirm("Effacer ta progression et tes pièces ?")) { Store.reset(); appliquerTheme(); S.obStep = 0; rendreOnboarding(); montrer("onboarding"); } };
 
-    // hook de développement (aperçu d'un écran) : index.html?dev=home|map|boutique…
-    try {
-      var dev = new URLSearchParams(location.search).get("dev");
-      if (dev) {
-        compilerMonde(0);
-        if (dev === "play") { var LL = Engine.lettresValides(S.ctx, S.seuil)[2] || "c"; demarrerSolo(LL, Engine.nbObjetsPourLettre(S.ctx, LL)); }
-        else montrer(dev);
-        return;
-      }
-    } catch (e) {}
-
-    // démarrage
-    if (Store.onboardingFait()) { S.ob = JSON.parse(JSON.stringify(Store.profil())); montrer("home"); }
-    else { S.obStep = 0; rendreOnboarding(); montrer("onboarding"); }
+    function demarrer() {
+      // hook de développement : index.html?dev=home|map|play|boutique…
+      try {
+        var dev = new URLSearchParams(location.search).get("dev");
+        if (dev) {
+          compilerMonde(0);
+          if (dev === "play") { var LL = Engine.lettresValides(S.ctx, S.seuil)[2] || "c"; demarrerSolo(LL, Engine.nbObjetsPourLettre(S.ctx, LL)); }
+          else montrer(dev);
+          return;
+        }
+      } catch (e) {}
+      if (Store.onboardingFait()) { S.ob = JSON.parse(JSON.stringify(Store.profil())); montrer("home"); }
+      else { S.obStep = 0; rendreOnboarding(); montrer("onboarding"); }
+    }
+    // charge les mots partagés (pour TOUS les joueurs) puis démarre — jamais bloquant
+    if (typeof Sync !== "undefined") Sync.charger().then(demarrer, demarrer); else demarrer();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();

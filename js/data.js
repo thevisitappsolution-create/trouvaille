@@ -155,6 +155,7 @@ const OBJETS_CAVERNE = [
   { mots: ["paquet", "colis"] },
   { mots: ["parapluie", "ombrelle"], f: 4 },
   { mots: ["perroquet", "ara"], f: 5 },
+  { mots: ["papillon"], f: 3 },
   { mots: ["piano"], f: 3 },
   { mots: ["pigeon", "colombe"], f: 2 },
   { mots: ["pinceau", "pinceaux"], f: 2 },
@@ -348,6 +349,15 @@ const OBJETS_CLASSE = [
   { mots: ["tableau noir", "ardoise", "tableau"] },
   { mots: ["tambourin"] },
   { mots: ["trousse"] },
+  { mots: ["cerf-volant"] },
+  { mots: ["ours en peluche", "ours", "nounours", "peluche"] },
+  { mots: ["lapin en peluche", "lapin"] },
+  { mots: ["ciseaux"] },
+  { mots: ["colle", "bâton de colle", "tube de colle"] },
+  { mots: ["corde à sauter", "corde"] },
+  { mots: ["bouteille", "gourde"] },
+  { mots: ["tapis"] },
+  { mots: ["rideaux", "rideau"] },
   { mots: ["xylophone"] },
   { mots: ["yo-yo", "yoyo"] }
 ];
@@ -401,7 +411,19 @@ const OBJETS_PARC = [
   { mots: ["table d'échecs", "table", "échiquier"] },
   { mots: ["train jouet", "train", "locomotive"] },
   { mots: ["télescope"] },
-  { mots: ["wagon", "wagon rouge", "chariot"] }
+  { mots: ["wagon", "wagon rouge", "chariot"] },
+  { mots: ["papillon"] },
+  { mots: ["oiseau", "moineau"] },
+  { mots: ["sac à dos", "sac"] },
+  { mots: ["toboggan"] },
+  { mots: ["balançoire"] },
+  { mots: ["bascule", "tape-cul"] },
+  { mots: ["canard"] },
+  { mots: ["assiette"] },
+  { mots: ["château de sable", "château"] },
+  { mots: ["pelle"] },
+  { mots: ["voiture jouet", "voiture", "auto"] },
+  { mots: ["arbre"] }
 ];
 
 /* ---- MONDE 5 : LA PLAGE AUX TRÉSORS ----------------------- */
@@ -453,7 +475,13 @@ const OBJETS_PLAGE = [
   { mots: ["serviette", "serviette de plage", "drap de bain"] },
   { mots: ["tongs", "claquettes"] },
   { mots: ["bijoux", "bijou", "joyaux"] },
-  { mots: ["pastèque", "melon d'eau"] }
+  { mots: ["pastèque", "melon d'eau"] },
+  { mots: ["mouette", "oiseau", "goéland"] },
+  { mots: ["rame", "pagaie", "aviron"] },
+  { mots: ["palmier"] },
+  { mots: ["drapeau"] },
+  { mots: ["tortue"] },
+  { mots: ["guirlande", "fanions"] }
 ];
 
 /* ---- LES MONDES -------------------------------------------

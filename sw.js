@@ -1,6 +1,6 @@
 /* Trouvaille — Service Worker (PWA installable + hors-ligne)
    Ne s'active que sur https:// (github.io), pas en file://. */
-var VERSION = "trouvaille-v2.2.0";
+var VERSION = "trouvaille-v2.3.0";
 var CORE = [
   "./",
   "./index.html",
@@ -9,6 +9,8 @@ var CORE = [
   "./js/engine.js",
   "./js/store.js",
   "./js/ads.js",
+  "./js/config.js",
+  "./js/sync.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
