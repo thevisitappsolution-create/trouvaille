@@ -163,7 +163,7 @@
     var m = mondesPrets()[idx];
     S.mondeIndex = idx;
     S.ctx = Engine.compile({ id: m.id, titre: m.titre, image: m.image, objets: objetsEffectifs(m) });
-    S.seuil = Engine.seuilAdaptatif(S.ctx, 4);
+    S.seuil = 4; // règle : une lettre n'est jouable qu'avec AU MOINS 4 mots
     return m;
   }
 

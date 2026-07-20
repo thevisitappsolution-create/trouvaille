@@ -1,6 +1,6 @@
 /* Trouvaille — Service Worker (PWA installable + hors-ligne)
    Ne s'active que sur https:// (github.io), pas en file://. */
-var VERSION = "trouvaille-v2.3.0";
+var VERSION = "trouvaille-v2.3.1";
 var CORE = [
   "./",
   "./index.html",
@@ -29,20 +29,28 @@ self.addEventListener("activate", function (e) {
   );
 });
 
+function metEnCache(req, res) {
+  if (res && res.status === 200 && res.type === "basic") {
+    var copy = res.clone();
+    caches.open(VERSION).then(function (c) { c.put(req, copy); });
+  }
+  return res;
+}
 self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
-  // Cache-first, puis réseau + mise en cache (images lourdes incluses).
-  e.respondWith(
-    caches.match(req).then(function (hit) {
-      if (hit) return hit;
-      return fetch(req).then(function (res) {
-        if (res && res.status === 200 && res.type === "basic") {
-          var copy = res.clone();
-          caches.open(VERSION).then(function (c) { c.put(req, copy); });
-        }
-        return res;
-      }).catch(function () { return caches.match("./index.html"); });
-    })
-  );
+  var chemin = new URL(req.url).pathname;
+  var estImage = /\.(png|jpe?g|gif|svg|webp|ico)$/i.test(chemin);
+
+  if (estImage) {
+    // Images : cache d'abord (elles changent rarement) — rapide + hors-ligne.
+    e.respondWith(caches.match(req).then(function (hit) {
+      return hit || fetch(req).then(function (res) { return metEnCache(req, res); });
+    }));
+  } else {
+    // Code / données (html, css, js, json) : RÉSEAU D'ABORD -> toujours à jour ;
+    // cache seulement en secours (hors-ligne). Fini les mises à jour bloquées.
+    e.respondWith(fetch(req).then(function (res) { return metEnCache(req, res); })
+      .catch(function () { return caches.match(req).then(function (hit) { return hit || caches.match("./index.html"); }); }));
+  }
 });
