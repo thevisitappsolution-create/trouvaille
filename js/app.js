@@ -8,7 +8,7 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var ENJEU = 3, CALLS = 2;
-  var VERSION_APP = "2.6.1"; // affichée dans Réglages ; à bumper à chaque déploiement
+  var VERSION_APP = "2.6.2"; // affichée dans Réglages ; à bumper à chaque déploiement
   var TACTILE = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
   var S = {
@@ -210,7 +210,8 @@
       '<h2 class="serif">Niveau ' + (idx + 1) + ' · lettre « ' + L.toUpperCase() + ' »</h2>' +
       '<p>' + esc(m.titre) + '</p>' +
       '<p style="color:var(--ink-soft)"><b>' + avail + '</b> mots à trouver<br>' +
-      '⭐ ' + s.s1 + '  ·  ⭐⭐ ' + s.s2 + '  ·  ⭐⭐⭐ ' + s.s3 +
+      '⭐ ' + s.s1 + '  ·  ⭐⭐ ' + s.s2 + '  ·  ⭐⭐⭐ ' + s.s3 + '<br>' +
+      '<span style="color:var(--green-d);font-weight:700">⏱️ +2,5 s par mot trouvé</span>' +
       (best ? '<br>Record : <b>' + best + ' pts</b>' : '') + '</p>' +
       '<div class="actions"><button class="btn ghost" id="m-fermer">Fermer</button>' +
       '<button class="btn green" id="m-jouer">Jouer</button></div>');
@@ -309,7 +310,7 @@
   }
 
   function majFuse() {
-    var pct = Math.max(0, S.restant / S.duree);
+    var pct = Math.max(0, Math.min(1, S.restant / S.duree)); // borné (le temps peut dépasser la durée)
     $("#fuse-flame").style.left = (pct * 100) + "%";
     $("#fuse-burn").style.width = ((1 - pct) * 100) + "%";
     var t = Math.ceil(S.restant), mm = Math.floor(t / 60), ss = t % 60;
@@ -343,10 +344,12 @@
     // mot valide
     S.clesJoueur.add(cle); S.joueurClaims.push(claim); ajouterChip(claim, "valide");
     majCompteur(); bip(660);
-    toast("Trouvé : " + res.display + " !", "ok");
     if (S.mode === "solo") {
       gagnerPointsSolo(res.objId); majEtoilesLive();
+      toast("✅ " + res.display + "  +2,5 s ⏱️", "ok");
       if (motsRestants().length === 0) setTimeout(finPartie, 350); // tout trouvé → fin anticipée
+    } else {
+      toast("Trouvé : " + res.display + " !", "ok");
     }
   }
 
@@ -357,6 +360,8 @@
     var mult = Math.min(2, 1 + 0.08 * (S.streak - 1)); // série (positive uniquement)
     S.scoreSolo += Math.round(base * mult);
     $("#play-pts").textContent = S.scoreSolo + " pts";
+    S.restant += 2.5; majFuse(); // +2,5 s par mot -> permet de tout trouver / viser 3★
+    var ft = $("#play-time"); if (ft) { ft.classList.remove("flash-plus"); void ft.offsetWidth; ft.classList.add("flash-plus"); }
   }
 
   function ajouterChip(claim, statut) {

@@ -265,8 +265,10 @@ h1.logo-txt { font-size: clamp(2rem, 8vw, 3rem); margin: 0; letter-spacing: .5px
   background: repeating-linear-gradient(90deg, #caa24a 0 8px, #b9903a 8px 14px); overflow: hidden; }
 .fuse .burn { position: absolute; top: 0; bottom: 0; right: 0; background: rgba(255,255,255,.55); border-radius: 6px; }
 .fuse .flame { position: absolute; top: -7px; font-size: 1.2rem; transform: translateX(-50%); transition: left .2s linear; }
-.fuse-row .time { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+.fuse-row .time { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; display: inline-block; }
 .fuse-row.urgent .time { color: var(--coral); animation: blink .6s infinite; }
+#play-time.flash-plus { animation: flashplus .5s ease; }
+@keyframes flashplus { 0% { color: var(--green-d); transform: scale(1.25); } 100% { color: var(--ink); transform: scale(1); } }
 @keyframes blink { 50% { opacity: .4; } }
 .objectif { font-size: .82rem; color: var(--ink-soft); margin: 2px 2px 8px; }
 
