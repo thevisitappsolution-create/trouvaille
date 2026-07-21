@@ -95,20 +95,18 @@
 
       <div class="scene" id="scene">
         <img id="scene-img" alt="Image du niveau" />
-        <div class="scene-hint" id="scene-hint">✋ glisse · molette pour zoomer</div>
-        <div class="zoom-ctrl">
-          <button id="zoom-plus">+</button><button id="zoom-moins">−</button><button id="zoom-reset">⤢</button>
-        </div>
+        <div class="scene-hint" id="scene-hint">✋ glisse · pince pour zoomer · double-tap pour recadrer</div>
       </div>
 
       <div class="bonus-bar" id="bonus-bar"></div>
+      <div class="compteur" id="compteur">0 mot</div>
+      <div class="liste-mots" id="liste-mots"></div>
 
+      <!-- saisie EN DERNIER : collée au bas (au-dessus du clavier), aucun vide dessous -->
       <div class="saisie-ligne">
         <input id="saisie" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Un mot commençant par la lettre…" />
         <button class="btn green" id="btn-envoyer">Go ↵</button>
       </div>
-      <div class="compteur" id="compteur">0 mot</div>
-      <div class="liste-mots" id="liste-mots"></div>
     </section>
 
     <!-- ============ RÉVÉLATION + CALL IMAGE (Duel) ============ -->

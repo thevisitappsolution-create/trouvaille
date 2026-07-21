@@ -8,7 +8,7 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   var ENJEU = 3, CALLS = 2;
-  var VERSION_APP = "2.6.0"; // affichée dans Réglages ; à bumper à chaque déploiement
+  var VERSION_APP = "2.6.1"; // affichée dans Réglages ; à bumper à chaque déploiement
   var TACTILE = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
 
   var S = {
@@ -717,17 +717,23 @@
     var sc = $("#scene");
     sc.addEventListener("wheel", function (e) { e.preventDefault(); zoomVers(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 1 / 1.15); }, { passive: false });
     var pts = {}, lastDist = 0;
-    sc.addEventListener("pointerdown", function (e) { sc.setPointerCapture(e.pointerId); pts[e.pointerId] = { x: e.clientX, y: e.clientY }; sc.classList.add("grabbing"); });
+    sc.addEventListener("pointerdown", function (e) { sc.setPointerCapture(e.pointerId); pts[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: Date.now() }; sc.classList.add("grabbing"); });
     sc.addEventListener("pointermove", function (e) {
       if (!pts[e.pointerId]) return; var ids = Object.keys(pts);
       if (ids.length === 1) { var p = pts[e.pointerId]; vue.tx += e.clientX - p.x; vue.ty += e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; appliquer(); }
       else if (ids.length === 2) { pts[e.pointerId] = { x: e.clientX, y: e.clientY }; var a = pts[ids[0]], b = pts[ids[1]], dist = Math.hypot(a.x - b.x, a.y - b.y); if (lastDist) zoomVers((a.x + b.x) / 2, (a.y + b.y) / 2, dist / lastDist); lastDist = dist; }
     });
-    function up(e) { delete pts[e.pointerId]; lastDist = 0; if (!Object.keys(pts).length) sc.classList.remove("grabbing"); }
+    function up(e) {
+      var p = pts[e.pointerId];
+      delete pts[e.pointerId]; lastDist = 0;
+      if (!Object.keys(pts).length) sc.classList.remove("grabbing");
+      // Tap simple ? -> double-tap recadre l'image (remplace l'ancien bouton ⤢).
+      if (p && Math.hypot(e.clientX - p.sx, e.clientY - p.sy) < 10 && Date.now() - p.t < 250) {
+        var now = Date.now();
+        if (now - (sc._lastTap || 0) < 320) { ajusterVue(); sc._lastTap = 0; } else sc._lastTap = now;
+      }
+    }
     sc.addEventListener("pointerup", up); sc.addEventListener("pointercancel", up);
-    $("#zoom-plus").onclick = function () { var r = sc.getBoundingClientRect(); zoomVers(r.left + r.width / 2, r.top + r.height / 2, 1.4); };
-    $("#zoom-moins").onclick = function () { var r = sc.getBoundingClientRect(); zoomVers(r.left + r.width / 2, r.top + r.height / 2, 1 / 1.4); };
-    $("#zoom-reset").onclick = ajusterVue;
     window.addEventListener("resize", function () { if (vue.iw && $("#screen-play").classList.contains("active")) ajusterVue(); });
   }
 
